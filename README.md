@@ -14,3 +14,9 @@ For method 2:
 cp csa_pmj_extrapolation.py $SCT_DIR/spinalcordtoolbox/csa_pmj.py
 sct-run_batch -jobs -1 -path-data <PATH_DATA> -path-out ~/pmj-based-cas_results-method-2 -script process_data_neck_position.sh
 ~~~
+
+To remove the added file of your current SCT, run the following line:
+~~~
+cd $SCT_DIR
+git restore spinalcordtoolbox/csa_pmj.py
+~~~
