@@ -1,8 +1,19 @@
 # PMJ-based CSA
 CSA measure based on distance from pontomedullary junction (PMJ)
 
-# Analysis
-## Neck positions
+# Analysis pipeline
+
+## Dependencies
+* SCT
+* Python 3.7
+
+### Installation
+Download this repository:
+~~~
+git clone https://github.com/sct-pipeline/pmj-based-csa
+~~~
+
+## Neck positions analysis
 To compute CSA with vertebral-base CSA and PMJ-based CSA using method 1 of centerline extrapolation, run:
 ~~~
 cd pmj-based-csa
