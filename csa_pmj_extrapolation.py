@@ -42,7 +42,7 @@ def get_slices_for_pmj_distance(segmentation, pmj, distance, extent, param_cente
     min_z_index, max_z_index = min(Z), max(Z)
 
     # Remove top slices
-    im_seg.data[:, :, max_z_index - 4:max_z_index + 1] = 0
+    im_seg.data[:, :, max_z_index - 0:max_z_index + 1] = 0
 
     # Compute the spinal cord centerline based on the spinal cord segmentation
     param_centerline.minmax = False  # Set to false to extrapolate centerline
@@ -63,9 +63,8 @@ def get_slices_for_pmj_distance(segmentation, pmj, distance, extent, param_cente
     if distance < arr_length[0][-1]:
         raise ValueError("Input distance of " + str(distance) + " mm is out of bound for minimum distance of " + str(arr_length[0][-1]) + " mm")
 
-    z_ref = np.array(range(min_z_index.astype(int), max_z_index.max().astype(int) + 1))
-    zmin = z_ref[np.argmin(np.array([np.abs(i - distance - extent/2) for i in arr_length[0]]))]
-    zmax = z_ref[np.argmin(np.array([np.abs(i - distance + extent/2) for i in arr_length[0]]))]
+    zmin = np.argmin(np.array([np.abs(i - distance - extent/2) for i in arr_length[0]]))
+    zmax = np.argmin(np.array([np.abs(i - distance + extent/2) for i in arr_length[0]]))
 
     # Check if the range of selected slices are covered by the segmentation
     if not all(np.any(im_seg.data[:, :, z]) for z in range(zmin, zmax)):
@@ -80,7 +79,7 @@ def get_slices_for_pmj_distance(segmentation, pmj, distance, extent, param_cente
 
     # Get corresponding slices
     slices = "{}:{}".format(zmin, zmax - 1)  # TODO check if we include last slice
-    return im_ctl, mask, slices
+    return im_ctl, mask, slices, arr_ctl
 
 
 def get_distance_from_pmj(centerline_points, z_index, px, py, pz):

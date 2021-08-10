@@ -71,24 +71,27 @@ def main():
     # Create an array with centerline coordinates
     centerline = np.genfromtxt(args.centerline, delimiter=',')
     # Get C2-C3 disc coordinate
-    c2_c3_disc = np.argwhere(disc_label.get_fdata() == 3)[0]
     # Compute distance from PMJ of the centerline
     arr_distance = get_distance_from_pmj(centerline, centerline[2].argmax(), px, py, pz)
-    # Get the index of centerline array of c2c3 disc
-    c2c3_index = np.abs(centerline[2] - c2_c3_disc[-1]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
-    distance_disc_pmj = arr_distance[:, c2c3_index][0]
-    subject = os.path.basename(args.disclabel).split('_')[0]
-
-    fname_out = args.o
-    if not os.path.isfile(fname_out):
-        with open(fname_out, 'w') as csvfile:
-            header = ['Subject', 'C2C3_distance_PMJ']
-            writer = csv.DictWriter(csvfile, fieldnames=header)
-            writer.writeheader()
-    with open(fname_out, 'a') as csvfile:
-        spamwriter = csv.writer(csvfile, delimiter=',')
-        line = [subject, distance_disc_pmj]
-        spamwriter.writerow(line)
+    # Get discs labels
+    discs_index = np.where(disc_label.get_fdata() !=0 )[-1]
+    discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() !=0 )]
+    for i in range(len(discs)):
+        # Get the index of centerline array of c2c3 disc
+        disc = discs[i]
+        disc_index_corr = np.abs(centerline[2] - discs_index[i]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
+        distance_disc_pmj = arr_distance[:, disc_index_corr][0]
+        subject = os.path.basename(args.disclabel).split('_')[1]
+        fname_out = args.o
+        if not os.path.isfile(fname_out):
+            with open(fname_out, 'w') as csvfile:
+                header = ['Subject', 'Disc', 'Distance (mm)']
+                writer = csv.DictWriter(csvfile, fieldnames=header)
+                writer.writeheader()
+        with open(fname_out, 'a') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=',')
+            line = [subject, disc, distance_disc_pmj]
+            spamwriter.writerow(line)
 
 
 if __name__ == '__main__':
