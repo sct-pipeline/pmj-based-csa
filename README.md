@@ -3,7 +3,7 @@ CSA measure based on distance from pontomedullary junction (PMJ)
 
 # Analysis pipeline
 
-## Dependencies
+### Dependencies
 * SCT
 * Python 3.7
 
