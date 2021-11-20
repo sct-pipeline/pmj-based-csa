@@ -89,9 +89,7 @@ detect_pmj_if_does_not_exist(){
   else
     echo "Not found. Proceeding with automatic labeling."
     # Detect PMJ
-    sct_detect_pmj -i ${file}.nii.gz -c t2 -qc ${PATH_QC}
-    #sct_detect_pmj -i ${file}.nii.gz -c t2 -s ${file_seg}.nii.gz -qc ${PATH_QC}
-
+    sct_detect_pmj -i ${file}.nii.gz -c t2 -s ${file_seg}.nii.gz -qc ${PATH_QC}
   fi
 }
 
@@ -146,6 +144,10 @@ sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pm
 
 # Compute distance between PMJ and intervertebral discs
 python $PATH_SCRIPT/get_distance_pmj_disc.py -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs.nii.gz -o ${PATH_RESULTS}/disc_pmj_distance.csv
+
+# Compute distance between PMJ and nerve rootlets TODO
+python $PATH_SCRIPT/get_distance_pmj_disc.py -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs.nii.gz -o ${PATH_RESULTS}/disc_pmj_distance.csv
+
 
 # Verify presence of output files and write log file if error
 # ------------------------------------------------------------------------------

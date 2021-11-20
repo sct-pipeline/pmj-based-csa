@@ -22,10 +22,12 @@ def get_parser():
     parser.add_argument('-centerline', required=True, type=str,
                         help="Input image.")
     parser.add_argument('-disclabel', required=True, type=str,
-                        help="Ouput image.")
+                        help="Labels of the intervertebral discs.")
+    parser.add_argument('-spinalroots', required=True, type=str,
+                        help="Labels of the spinal nerve rootlets.")
     parser.add_argument('-o', required=False, type=str,
                         default='pmj_disc_distance.csv',
-                        help="Ouput csv filename.")
+                        help="Output csv filename.")
 
     return parser
 
@@ -58,6 +60,8 @@ def get_distance_from_pmj(centerline_points, z_index, px, py, pz):
     arr_length = np.stack((arr_length, centerline_points[2][:z_index + 1]), axis=0)
     return arr_length
 
+#def get_distance_discs_nerve(discs, nerve):
+
 
 def main():
     parser = get_parser()
@@ -65,6 +69,9 @@ def main():
 
     disc_label = nib.load(args.disclabel)
     dim = disc_label.header['pixdim']
+
+    nerve_label = nib.load(args.spinalroots)
+
     px = dim[0]
     py = dim[1]
     pz = dim[2]
@@ -76,6 +83,10 @@ def main():
     # Get discs labels
     discs_index = np.where(disc_label.get_fdata() !=0 )[-1]
     discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() !=0 )]
+
+    nerve_index = np.where(nerve_label.get_fdata() !=0 )[-1]
+    nerve = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() !=0 )]
+
     for i in range(len(discs)):
         # Get the index of centerline array of c2c3 disc
         disc = discs[i]
