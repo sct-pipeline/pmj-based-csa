@@ -156,9 +156,9 @@ python $PATH_SCRIPT/get_distance_pmj_disc.py -centerline ${file_t2_seg}_centerli
 # Verify presence of output files and write log file if error
 # ------------------------------------------------------------------------------
 FILES_TO_CHECK=(
-  "${SUBJECT_ID}_${SES}_T2w_RPI_seg.nii.gz" 
-  "${SUBJECT_ID}_${SES}_T2w_RPI_seg_labeled.nii.gz"
-  "${SUBJECT_ID}_${SES}_T2w__RPI_pmj.nii.gz"
+  "${SUBJECT_ID}_${SES}_T2w_seg.nii.gz" 
+  "${SUBJECT_ID}_${SES}_T2w_seg_labeled.nii.gz"
+  "${SUBJECT_ID}_${SES}_T2w_labels-spinalroots-manual.nii.gz"
 )
 pwd
 for file in ${FILES_TO_CHECK[@]}; do
