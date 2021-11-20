@@ -121,7 +121,7 @@ file_t2_seg=$FILESEG
 
 # Create labeled segmentation (only if it does not exist) 
 label_if_does_not_exist ${file_t2} ${file_t2_seg}
-mv "${file_t2_seg}_labeled" "${file_t2_seg}_labeled_vert"
+mv "${file_t2_seg}_labeled.nii.gz" "${file_t2_seg}_labeled_vert.nii.gz"
 file_t2_seg_labeled="${file_t2_seg}_labeled_vert"
 
 # Generate QC report to assess vertebral labeling
