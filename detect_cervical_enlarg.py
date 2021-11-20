@@ -44,7 +44,7 @@ def get_csa(csa_filename):
 
     """
     sc_data = csv2dataFrame(csa_filename)
-    csa = pd.DataFrame(sc_data[['Filename', 'Slice (I->S)', 'MEAN(area)']]).rename(columns={'Filename': 'Subject'})
+    csa = pd.DataFrame(sc_data[['Filename', 'Slice (I->S)', 'VertLevel', 'MEAN(area)']]).rename(columns={'Filename': 'Subject'})
     # Add a columns with subjects eid from Filename column
     csa.loc[:, 'Subject'] = csa['Subject'].str.slice(-43, -32)
     
@@ -61,11 +61,24 @@ def main():
     #df[df.rebounds != 'None']
     df = df.replace('None', pd.np.nan)
     df = df.dropna(0, how='any').reset_index(drop=True)
-    print(df['MEAN(area)'].to_numpy())
+    df = df.iloc[::-1]
     plt.figure()
-    plt.plot(df['Slice (I->S)'].to_numpy(), pd.to_numeric(df['MEAN(area)']).to_numpy(), 'r')
-    plt.ylabel('CSA [$mm^2$]')
-    plt.xlabel('Slice (I-->S)')
+    fig, ax = plt.subplots(figsize=(4.5,6))
+     
+    # Get slices where array changes value
+    vert = df['VertLevel'].to_numpy()
+    ind_vert = np.where(vert[:-1] != vert[1:])[0]
+    for x in ind_vert:
+        plt.axhline(x, color='k', linestyle='--')
+        ax.text(x/len(ind_vert), 0.05, vert[x], transform=ax.transAxes)
+    
+    plt.plot(pd.to_numeric(df['MEAN(area)']).to_numpy(),df['Slice (I->S)'].to_numpy(), 'r')
+    plt.grid()
+    plt.title('CSA perlevel')
+    plt.ylim(max(df['Slice (I->S)'].to_numpy()), min(df['Slice (I->S)'].to_numpy()))
+    plt.xlabel('CSA [$mm^2$]')
+    plt.ylabel('Slice (S->I)')
+    #ax2.set_xlabel('VertLevel')
     plt.savefig(args.o)
 
 if __name__ == '__main__':
