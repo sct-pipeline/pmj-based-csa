@@ -63,21 +63,24 @@ def main():
     df = df.dropna(0, how='any').reset_index(drop=True)
     df = df.iloc[::-1]
     plt.figure()
-    fig, ax = plt.subplots(figsize=(4.5,6))
+    fig, ax = plt.subplots(figsize=(5,6))
+    plt.tick_params(axis='y', which='both', labelleft=False, labelright=True)
+
+
      
     # Get slices where array changes value
     vert = df['VertLevel'].to_numpy()
     ind_vert = np.where(vert[:-1] != vert[1:])[0]
     for x in ind_vert:
-        plt.axhline(x, color='k', linestyle='--')
+        plt.axhline(x, color='r', linestyle='--')
         ax.text(x/len(ind_vert), 0.05, vert[x], transform=ax.transAxes)
     
-    plt.plot(pd.to_numeric(df['MEAN(area)']).to_numpy(),df['Slice (I->S)'].to_numpy(), 'r')
+    plt.plot(pd.to_numeric(df['MEAN(area)']).to_numpy(),df['Slice (I->S)'].to_numpy())
     plt.grid()
-    plt.title('CSA perlevel')
+    plt.title('CSA perlevel', fontsize=16)
     plt.ylim(max(df['Slice (I->S)'].to_numpy()), min(df['Slice (I->S)'].to_numpy()))
-    plt.xlabel('CSA [$mm^2$]')
-    plt.ylabel('Slice (S->I)')
+    plt.xlabel('CSA [$mm^2$]', fontsize=14)
+    plt.ylabel('Slice (S->I)', fontsize=14)
     #ax2.set_xlabel('VertLevel')
     plt.savefig(args.o)
 
