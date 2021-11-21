@@ -134,7 +134,7 @@ sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfil
 # Compute average cord CSA  at spinal levels
 file_nerve="${PATH_DATA}/derivatives/labels/${SUBJECT}/${folder_contrast}/${file_t2}_labels-spinalroots-manual.nii.gz"
 # Create a labeled segmentation with spinal levels
-sct_label_vertebrae -i ${file_t2}.nii.gz -s ${file_seg}.nii.gz -discfile ${file_nerve}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
+sct_label_vertebrae -i ${file_t2}.nii.gz -s ${file_t2_seg}.nii.gz -discfile ${file_nerve}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
 file_t2_seg_labeled_nerve="${file_t2_seg}_labeled"
 sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfile ${file_t2_seg_labeled_nerve}.nii.gz -o ${PATH_RESULTS}/csa-SC_spinal.csv -append 1
 
