@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
-# Functions to get distance from PMJ for processing segmentation data
+# Functions to plot CSA perslice and vertebral levels
+# Need sct_process_segmentation -vert 1:10 -vertfile -perslice 1
 # Author: Sandrine Bédard
 
 import matplotlib.pyplot as plt
@@ -54,6 +55,13 @@ def get_csa(csa_filename):
     csa = csa.set_index('Subject')
     return csa
 
+
+def smooth(y, box_pts):
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    return y_smooth
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -65,22 +73,20 @@ def main():
     plt.figure()
     fig, ax = plt.subplots(figsize=(5,6))
     plt.tick_params(axis='y', which='both', labelleft=False, labelright=True)
-
-
      
     # Get slices where array changes value
     vert = df['VertLevel'].to_numpy()
     ind_vert = np.where(vert[:-1] != vert[1:])[0]
     for x in ind_vert:
-        plt.axhline(x, color='r', linestyle='--')
+        plt.axhline(x, color='k', linestyle='--')
         ax.text(x/len(ind_vert), 0.05, vert[x], transform=ax.transAxes)
     
-    plt.plot(pd.to_numeric(df['MEAN(area)']).to_numpy(),df['Slice (I->S)'].to_numpy())
+    plt.plot(smooth(pd.to_numeric(df['MEAN(area)']).to_numpy(), 6)[1:-1],df['Slice (I->S)'].to_numpy()[1:-1], 'r', aa=True)
     plt.grid()
-    plt.title('CSA perlevel', fontsize=16)
-    plt.ylim(max(df['Slice (I->S)'].to_numpy()), min(df['Slice (I->S)'].to_numpy()))
-    plt.xlabel('CSA [$mm^2$]', fontsize=14)
-    plt.ylabel('Slice (S->I)', fontsize=14)
+    plt.title('Aire transversale de la moelle épinière', fontsize=16)
+    plt.ylim(max(df['Slice (I->S)'].to_numpy()[6:-6]), min(df['Slice (I->S)'].to_numpy()[6:-6]))
+    plt.xlabel('ATM ($mm^2$)', fontsize=14)
+    plt.ylabel('Coupe (S->I)', fontsize=14)
     #ax2.set_xlabel('VertLevel')
     plt.savefig(args.o)
 
