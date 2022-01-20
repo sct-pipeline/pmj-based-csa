@@ -80,9 +80,9 @@ detect_pmj_if_does_not_exist(){
 # Display useful info for the log, such as SCT version, RAM and CPU cores available
 sct_check_dependencies -short
 
-#SUBJECT_ID=$(dirname "$SUBJECT")
+SUBJECT_ID=$(dirname "$SUBJECT")
 
-#SES=$(basename "$SUBJECT")
+SES=$(basename "$SUBJECT")
 # Go to folder where data will be copied and processed
 cd ${PATH_DATA_PROCESSED}
 # Copy source images
@@ -93,101 +93,38 @@ echo $PWD
 
 cd ${SUBJECT}/anat/
 
-# Head Normal
-ses="ses-headNormal"
-file_t2_normal="${SUBJECT}_${ses}_T2w"
 
-sct_image -i ${file_t2_normal}.nii.gz -setorient RPI -o ${file_t2_normal}.nii.gz
+file_t2="${SUBJECT_ID}_${SES}_T2w"
 
-# Segment spinal cord (only if it does not exist)
-segment_if_does_not_exist $file_t2_normal "t2"
-file_t2_normal_seg=$FILESEG
-detect_pmj_if_does_not_exist $file_t2_normal $file_t2_seg
-# process seg only to generate centerline
-sct_process_segmentation -i ${file_t2_normal_seg}.nii.gz -pmj ${file_t2_normal}_pmj.nii.gz -pmj-distance 50 -o ${PATH_RESULTS}/csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2_normal}.nii.gz -v 2
-
-file_pmj_ctl=${file_t2_normal}_seg_centerline_extrapolated
-# Straigthen the spinal cord
-# TODO: add -ofolder to save different warping fields
-sct_straighten_spinalcord -i ${file_t2_normal}.nii.gz -s ${file_pmj_ctl}.nii.gz
-file_t2_normal_straight="${file_t2_normal}_straight"
-# Smooth along AP direction
-
-#sct_maths -smooth 0,1,0 -i ${file_t2_normal_straight}.nii.gz -o ${file_t2_normal_straight}_smooth.nii.gz
-#file_t2_normal_straight_smooth="${file_t2_normal_straight}_smooth"
-file_t2_normal_straight_smooth=${file_t2_normal_straight}
-# Symmetrize along RL
-sct_maths -i ${file_t2_normal_straight_smooth}.nii.gz -symmetrize 0 -o ${file_t2_normal_straight_smooth}_sym.nii.gz
-
-
-# Head Up
-
-ses="ses-headUp"
-file_t2_up="${SUBJECT}_${ses}_T2w"
-
-sct_image -i ${file_t2_up}.nii.gz -setorient RPI -o ${file_t2_up}.nii.gz
+sct_image -i ${file_t2}.nii.gz -setorient RPI -o ${file_t2}.nii.gz
 
 # Segment spinal cord (only if it does not exist)
-segment_if_does_not_exist $file_t2_up "t2"
-file_t2_up_seg=$FILESEG
-detect_pmj_if_does_not_exist $file_t2_up $file_t2_seg
+segment_if_does_not_exist $file_t2 "t2"
+file_t2_seg=$FILESEG
+detect_pmj_if_does_not_exist $file_t2 $file_t2_seg
 # process seg only to generate centerline
-sct_process_segmentation -i ${file_t2_up_seg}.nii.gz -pmj ${file_t2_up}_pmj.nii.gz -pmj-distance 50 -o ${PATH_RESULTS}/csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2_up}.nii.gz -v 2
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 50 -o ${PATH_RESULTS}/csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
 
-file_pmj_ctl=${file_t2_up}_seg_centerline_extrapolated
+file_pmj_ctl=${file_t2}_seg_centerline_extrapolated
 # Straigthen the spinal cord
-# TODO: add -ofolder to save different warping fields
-sct_straighten_spinalcord -i ${file_t2_up}.nii.gz -s ${file_pmj_ctl}.nii.gz
-file_t2_up_straight="${file_t2_up}_straight"
+sct_straighten_spinalcord -i ${file_t2}.nii.gz -s ${file_pmj_ctl}.nii.gz
+file_t2_straight="${file_t2}_straight"
 
-# Smooth along AP direction
+# Denoise
+sct_maths -i ${file_t2_straight}.nii.gz -denoise 1 -o ${file_t2_straight}_denoised.nii.gz
+file_t2_straight_denoised="${file_t2_straight}_denoised"
 
-#sct_maths -smooth 0,1,0 -i ${file_t2_up_straight}.nii.gz -o ${file_t2_up_straight}_smooth.nii.gz
-#file_t2_up_straight_smooth="${file_t2_up_straight}_smooth"
-file_t2_up_straight_smooth=${file_t2_up_straight}
-# Symmetrize along RL
-sct_maths -i ${file_t2_up_straight_smooth}.nii.gz -symmetrize 0 -o ${file_t2_up_straight_smooth}_sym.nii.gz
+# Open FSLeyes to identify nerve rootlets
+fsleyes ${file_t2_straight_denoised}.nii.gz
 
-
-# Head Down
-
-ses="ses-headDown"
-
-file_t2_down="${SUBJECT}_${ses}_T2w"
-
-sct_image -i ${file_t2_down}.nii.gz -setorient RPI -o ${file_t2_down}.nii.gz
-
-# Segment spinal cord (only if it does not exist)
-segment_if_does_not_exist $file_t2_down "t2"
-file_t2_down_seg=$FILESEG
-detect_pmj_if_does_not_exist $file_t2_down $file_t2_seg
-# process seg only to generate centerline
-sct_process_segmentation -i ${file_t2_down_seg}.nii.gz -pmj ${file_t2_down}_pmj.nii.gz -pmj-distance 50 -o ${PATH_RESULTS}/csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2_down}.nii.gz -v 2
-
-file_pmj_ctl=${file_t2_down}_seg_centerline_extrapolated
-# Straigthen the spinal cord
-# TODO: add -ofolder to save different warping fields
-sct_straighten_spinalcord -i ${file_t2_down}.nii.gz -s ${file_pmj_ctl}.nii.gz
-file_t2_down_straight="${file_t2_down}_straight"
-# Smooth along AP direction
-
-#sct_maths -smooth 0,1,0 -i ${file_t2_down_straight}.nii.gz -o ${file_t2_down_straight}_smooth.nii.gz
-#file_t2_down_straight_smooth="${file_t2_down_straight}_smooth"
-file_t2_down_straight_smooth=${file_t2_down_straight_smooth}
-# Symmetrize along RL
-sct_maths -i ${file_t2_down_straight_smooth}.nii.gz -symmetrize 0 -o ${file_t2_down_straight_smooth}_sym.nii.gz
-
-# Register to headNormal
-sct_register_multimodal -i ${file_t2_up_straight_smooth}_sym.nii.gz -d ${file_t2_normal_straight_smooth}_sym.nii.gz -param step=1,type=im,metric=MeanSquares,algo=affine,iter=15:step=2,type=im,metric=MeanSquares,algo=syn,iter=10,shrink=2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
-sct_register_multimodal -i ${file_t2_down_straight_smooth}_sym.nii.gz -d ${file_t2_normal_straight_smooth}_sym.nii.gz -param step=1,type=im,metric=MeanSquares,algo=affine,iter=15:step=2,type=im,metric=MeanSquares,algo=syn,iter=10,shrink=2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
-
+# Bring back label to curved space
+file_t2_straight_nerve="${file_t2_straight_denoised}_spinalroots"
+sct_apply_transfo -i ${file_t2_straight_nerve}.nii.gz -w warp_straight2curve.nii.gz -d ${file_t2}.nii.gz -x label -o ${file_t2}_labels-spinalroots-manual.nii.gz
 
 # Verify presence of output files and write log file if error
 # ------------------------------------------------------------------------------
 FILES_TO_CHECK=(
-#  "${SUBJECT_ID}_${SES}_T2w_seg.nii.gz" 
-#  "${SUBJECT_ID}_${SES}_T2w_seg_labeled.nii.gz"
-#  "${SUBJECT_ID}_${SES}_T2w_labels-spinalroots-manual.nii.gz"
+  "${SUBJECT_ID}_${SES}_T2w_labels-spinalroots-manual.nii.gz"
 )
 pwd
 for file in ${FILES_TO_CHECK[@]}; do
