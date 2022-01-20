@@ -1,24 +1,41 @@
 # PMJ-based CSA
 CSA measure based on distance from pontomedullary junction (PMJ)
 
-# Manual labeling of spinal cord rootlets with FSLeyes
 
-1. Open FSLeyes
-2. Open the image to label
-3. Click on: *Tools → Edit mode*
-4. Click on: *Edit (ortho view) → Create mask*
-5. Change parameter `Fill value` according to the spinal level : 
-6. Locate the C3 spinal root using the sagittal and axial views (usually around C2 vertebral level)
-7. Identify the slices that cover the C3 spinal root using the coronal and axial views (see schematic below)
-8. Place the label 3 at the center of the spinal cord on the median axial slice that cover the spinal root
-9. Erase the 3 voxels we don’t want (verify that the label is only one voxel
-10. Repeat steps 3 to 5 for each spinal root by modifying the parameter `Fill value`:
+# Manual labeling of spinal cord rootlets with FSLeyes
+## Installation
+
+Download this repository:
+```
+git clone https://github.com/sct-pipeline/pmj-based-csa.git
+```
+## Run manual labeling script
+1. In the terminal, go into this repository
+~~~
+cd pmj-based-csa
+~~~
+2. Run the correction script specifying `path-data` and `path-output`
+~~~
+sct_run_batch -jobs -1 -path-data <PATH-DATA> -path-output ~/pmj_csa_nerve_roots_results -script identify_nerve.sh
+~~~
+
+An FSLeyes window will open and the following steps are in FSLeyes.
+
+4. Click on: *Tools → Edit mode*
+5. Click on: *Edit (ortho view) → Create mask*
+6. Change parameter `Fill value` according to the spinal level : 
+7. Locate the C3 spinal root using the sagittal and axial views (usually around C2 vertebral level)
+8. Identify the slices that cover the C3 spinal root using the coronal and axial views (see schematic below)
+9. Place the label 3 at the center of the spinal cord on the median axial slice that cover the spinal root
+10. Erase the 3 voxels we don’t want (verify that the label is only one voxel
+11. Repeat steps 3 to 5 for each spinal root by modifying the parameter `Fill value`:
     * C4 → 4, C5 → 5, … , C8 → 8, T1 → 9, …, T4 → 12, …
     * Stop when the contrast is not strong enough to accurately label the spinal roots
-11. Save the mask under the same folder than the image with the suffix `_spinalroots.nii.gz`
+12. Save the mask under the same folder than the image with the suffix `_spinalroots.nii.gz`
 
 ![image](https://user-images.githubusercontent.com/71230552/141651001-f0c438d7-ae1e-44ba-b689-c5f5b319be22.png)
 
+13. Repeat step 4 to 12 for every image (the FSLeyes window will automatically open)
 
 # Analysis pipeline
 
