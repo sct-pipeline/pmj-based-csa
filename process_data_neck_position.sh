@@ -129,7 +129,7 @@ sct_qc -i ${file_t2}.nii.gz -s ${file_t2_seg_labeled}.nii.gz -p sct_label_verteb
 # Flatten scan along R-L direction (to make nice figures)
 sct_flatten_sagittal -i ${file_t2}.nii.gz -s ${file_t2_seg}.nii.gz
 # Compute average cord CSA between C2-C3, C3-C4, C4-C5, C5-C6
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfile ${file_t2_seg_labeled}.nii.gz -o ${PATH_RESULTS}/csa-SC_vert.csv -append 1
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfile ${file_t2_seg_labeled}.nii.gz -o ${PATH_RESULTS}/${SUBJECT}_csa-SC_vert.csv -append 1
 
 # Detect PMJ
 detect_pmj_if_does_not_exist $file_t2 $file_t2_seg
@@ -146,7 +146,7 @@ file_nerve="${PATH_DATA}/derivatives/labels/${SUBJECT}/${folder_contrast}/${file
 # Create a labeled segmentation with spinal levels
 sct_labelS_vertebrae -i ${file_t2}.nii.gz -s ${file_t2_seg}.nii.gz -discfile ${file_nerve}.nii.gz -c t2 -qc ${PATH_QC} -qc-subject ${SUBJECT}
 file_t2_seg_labeled_nerve="${file_t2_seg}_labeled"
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfile ${file_t2_seg_labeled_nerve}.nii.gz -o ${PATH_RESULTS}/csa-SC_spinal.csv -append 1
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfile ${file_t2_seg_labeled_nerve}.nii.gz -o ${PATH_RESULTS}/${SUBJECT}_csa-SC_spinal.csv -append 1
 
 
 
