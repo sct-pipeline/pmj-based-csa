@@ -128,7 +128,9 @@ file_t2_seg_labeled="${file_t2_seg}_labeled_vert"
 sct_qc -i ${file_t2}.nii.gz -s ${file_t2_seg_labeled}.nii.gz -p sct_label_vertebrae -qc ${PATH_QC} -qc-subject ${SUBJECT}
 # Flatten scan along R-L direction (to make nice figures)
 sct_flatten_sagittal -i ${file_t2}.nii.gz -s ${file_t2_seg}.nii.gz
-# Compute average cord CSA between C2-C3, C3-C4, C4-C5, C5-C6
+
+# Compute average cord CSA between C2-C3, C3-C4, C4-C5, C5-
+mkdir ${PATH_RESULTS}
 sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfile ${file_t2_seg_labeled}.nii.gz -o ${PATH_RESULTS}/${SUBJECT}_csa-SC_vert.csv -append 1
 
 # Detect PMJ
