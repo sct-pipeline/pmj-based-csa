@@ -25,6 +25,8 @@ def get_parser():
                         help="Labels of the intervertebral discs.")
     parser.add_argument('-spinalroots', required=True, type=str,
                         help="Labels of the spinal nerve rootlets.")
+    parser.add_argument('-subject', required=True, type=str,
+                        help="Subject ID")
     parser.add_argument('-o', required=False, type=str,
                         default='pmj_disc_distance.csv',
                         help="Output csv filename.")
@@ -92,7 +94,8 @@ def main():
         disc = discs[i]
         disc_index_corr = np.abs(centerline[2] - discs_index[i]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
         distance_disc_pmj = arr_distance[:, disc_index_corr][0]
-        subject = os.path.basename(args.disclabel).split('_')[1]
+        subject = args.subject
+        # subject = os.path.basename(args.disclabel).split('_')[1]
         fname_out = args.o
         if not os.path.isfile(fname_out):
             with open(fname_out, 'w') as csvfile:
