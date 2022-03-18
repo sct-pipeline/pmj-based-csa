@@ -154,7 +154,7 @@ sct_process_segmentation -i ${file_t2_seg}.nii.gz -vert 1:8 -perlevel 1 -vertfil
 
 
 # Compute distance between PMJ and intervertebral discs
-python $PATH_SCRIPT/get_distance_pmj_disc.py -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs.nii.gz -o ${PATH_RESULTS}/disc_pmj_distance.csv -spinalroots ${file_nerve}.nii.gz
+python $PATH_SCRIPT/get_distance_pmj_disc.py -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs.nii.gz -o ${PATH_RESULTS}/disc_pmj_distance.csv -spinalroots ${file_nerve}.nii.gz -subject ${SUBJECT_ID}_${SES}
 
 # Verify presence of output files and write log file if error
 # ------------------------------------------------------------------------------
