@@ -1,0 +1,31 @@
+{
+    "descriptions": [
+        {
+            "dataType": "anat",
+            "modalityLabel": "T2w",
+            "customLabels": "ses-headDown",
+            "criteria": {
+                "SeriesDescription": "T2w",
+                "ProtocolName": "T2w_0.6mm_headDown"
+            }
+        },
+        {
+            "dataType": "anat",
+            "modalityLabel": "T2w",
+            "customLabels": "ses-headUp",
+            "criteria": {
+                "SeriesDescription": "T2w",
+                "ProtocolName": "T2w_0.6mm_headUp"
+            }
+        },
+        {
+            "dataType": "anat",
+            "modalityLabel": "T2w",
+            "customLabels": "ses-headNormal",
+            "criteria": {
+                "SeriesDescription": "T2w",
+                "ProtocolName": "T2w_0.6mm_headNormal"
+            }
+        }    
+    ]
+}

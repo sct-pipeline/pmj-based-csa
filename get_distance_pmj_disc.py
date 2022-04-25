@@ -20,7 +20,7 @@ def get_parser():
     parser = argparse.ArgumentParser(
         description="Compute distance between C2-C3 intervertebral disc and PMJ. Outputs .csv file with results. | Orientation needs to be RPI")
     parser.add_argument('-centerline', required=True, type=str,
-                        help="Input image.")
+                        help=".csv file of the centerline.")
     parser.add_argument('-disclabel', required=True, type=str,
                         help="Labels of the intervertebral discs.")
     parser.add_argument('-spinalroots', required=True, type=str,
@@ -85,26 +85,32 @@ def main():
     # Get discs labels
     discs_index = np.where(disc_label.get_fdata() !=0 )[-1]
     discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() !=0 )]
-
+    print(discs)
     nerve_index = np.where(nerve_label.get_fdata() !=0 )[-1]
-    nerve = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() !=0 )]
+    nerves = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() !=0 )]
+    nerves = list(map(int, nerves))
+    nerves = np.sort(nerves, None)
+    print(nerves)
 
-    for i in range(len(discs)):
-        # Get the index of centerline array of c2c3 disc
-        disc = discs[i]
-        disc_index_corr = np.abs(centerline[2] - discs_index[i]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
-        distance_disc_pmj = arr_distance[:, disc_index_corr][0]
+    for i in range(len(nerves)):
+        # Get the index of centerline array disc
+        nerve = nerves[i]
+        disc = discs[nerve]
+        # TODO quit if nerve is smaller than disc
+        disc_index_corr = np.abs(centerline[2] - discs_index[nerve]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
+        nerve_index_corr = np.abs(centerline[2] - nerve_index[i]).argmin()
+        distance_pmj_nerve = arr_distance[:, nerve_index_corr][0]
+        distance_disc_nerve = arr_distance[:, nerve_index_corr][0] - arr_distance[:, disc_index_corr][0] # Disc to nerve
         subject = args.subject
-        # subject = os.path.basename(args.disclabel).split('_')[1]
         fname_out = args.o
         if not os.path.isfile(fname_out):
             with open(fname_out, 'w') as csvfile:
-                header = ['Subject', 'Disc', 'Distance (mm)']
+                header = ['Subject', 'Nerve', 'Disc', 'Distance - PMJ (mm)', 'Distance - Disc (mm)']
                 writer = csv.DictWriter(csvfile, fieldnames=header)
                 writer.writeheader()
         with open(fname_out, 'a') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',')
-            line = [subject, disc, distance_disc_pmj]
+            line = [subject, nerve, disc, distance_pmj_nerve, distance_disc_nerve]
             spamwriter.writerow(line)
 
 
