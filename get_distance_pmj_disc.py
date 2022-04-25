@@ -85,6 +85,7 @@ def main():
     # Get discs labels
     discs_index = np.where(disc_label.get_fdata() != 0)[-1]
     discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() != 0)]
+    print(discs)
     discs = np.sort(discs, None)
     print(discs)
     nerve_index = np.where(nerve_label.get_fdata() != 0)[-1]
