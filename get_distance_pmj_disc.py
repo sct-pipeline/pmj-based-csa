@@ -83,11 +83,12 @@ def main():
     # Compute distance from PMJ of the centerline
     arr_distance = get_distance_from_pmj(centerline, centerline[2].argmax(), px, py, pz)
     # Get discs labels
-    discs_index = np.where(disc_label.get_fdata() !=0 )[-1]
-    discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() !=0 )]
+    discs_index = np.where(disc_label.get_fdata() != 0)[-1]
+    discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() != 0)]
+    discs = np.sort(discs, None)
     print(discs)
-    nerve_index = np.where(nerve_label.get_fdata() !=0 )[-1]
-    nerves = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() !=0 )]
+    nerve_index = np.where(nerve_label.get_fdata() != 0)[-1]
+    nerves = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() != 0)]
     nerves = list(map(int, nerves))
     nerves = np.sort(nerves, None)
     print(nerves)
@@ -95,12 +96,12 @@ def main():
     for i in range(len(nerves)):
         # Get the index of centerline array disc
         nerve = nerves[i]
-        disc = discs[nerve]
+        disc = discs[nerve - 1]
         # TODO quit if nerve is smaller than disc
         disc_index_corr = np.abs(centerline[2] - discs_index[nerve]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
         nerve_index_corr = np.abs(centerline[2] - nerve_index[i]).argmin()
         distance_pmj_nerve = arr_distance[:, nerve_index_corr][0]
-        distance_disc_nerve = arr_distance[:, nerve_index_corr][0] - arr_distance[:, disc_index_corr][0] # Disc to nerve
+        distance_disc_nerve = arr_distance[:, disc_index_corr][0] - arr_distance[:, nerve_index_corr][0]  # Disc to nerve
         subject = args.subject
         fname_out = args.o
         if not os.path.isfile(fname_out):
