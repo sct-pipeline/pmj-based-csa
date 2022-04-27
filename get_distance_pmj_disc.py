@@ -8,7 +8,6 @@
 
 import argparse
 import csv
-from operator import sub
 import numpy as np
 import nibabel as nib
 import os
