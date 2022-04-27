@@ -85,26 +85,39 @@ def main():
     # Get discs labels
     discs_index = np.where(disc_label.get_fdata() != 0)[-1]
     discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() != 0)]
-    print(discs)
-    discs = np.sort(discs, None)
-    print(discs)
+    #discs = np.sort(discs, None)
     nerve_index = np.where(nerve_label.get_fdata() != 0)[-1]
     nerves = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() != 0)]
     nerves = list(map(int, nerves))
-    nerves = np.sort(nerves, None)
-    print(nerves)
+    #nerves = np.sort(nerves, None)
+    nerve2_index_corr = np.abs(centerline[2] - nerve_index[np.argmin(nerves)]).argmin()
+    for j in range(len(discs)):
+        disc = discs[j]
+        disc_index_corr = np.abs(centerline[2] - discs_index[j]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
+        distance_disc_nerve = arr_distance[:, disc_index_corr][0] - arr_distance[:, nerve2_index_corr][0]  # Disc to nerve
+        subject = args.subject
+        fname_out = args.o
+        nerve = 2
+        distance_pmj_nerve = np.NaN
+        if not os.path.isfile(fname_out):
+            with open(fname_out, 'w') as csvfile:
+                header = ['Subject', 'Nerve', 'Disc', 'Distance - PMJ (mm)', 'Distance - Disc (mm)']
+                writer = csv.DictWriter(csvfile, fieldnames=header)
+                writer.writeheader()
+        with open(fname_out, 'a') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=',')
+            line = [subject, nerve, disc, distance_pmj_nerve, distance_disc_nerve]
+            spamwriter.writerow(line)
 
     for i in range(len(nerves)):
         # Get the index of centerline array disc
         nerve = nerves[i]
-        disc = discs[nerve - 1]
-        # TODO quit if nerve is smaller than disc
-        disc_index_corr = np.abs(centerline[2] - discs_index[nerve]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
         nerve_index_corr = np.abs(centerline[2] - nerve_index[i]).argmin()
         distance_pmj_nerve = arr_distance[:, nerve_index_corr][0]
-        distance_disc_nerve = arr_distance[:, disc_index_corr][0] - arr_distance[:, nerve_index_corr][0]  # Disc to nerve
         subject = args.subject
         fname_out = args.o
+        disc = np.NaN
+        distance_disc_nerve = np.NaN
         if not os.path.isfile(fname_out):
             with open(fname_out, 'w') as csvfile:
                 header = ['Subject', 'Nerve', 'Disc', 'Distance - PMJ (mm)', 'Distance - Disc (mm)']
