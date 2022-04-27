@@ -3,13 +3,13 @@
 # Functions to analyse CSA data with nerve rootlets, vertebral levels and PMJ
 # Author: Sandrine Bédard
 
-import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 import argparse
-import numpy as np
+import glob
 import os
-import csv
+import numpy as np
+import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -48,12 +48,15 @@ def get_csa(csa_filename):
 
     """
     sc_data = csv2dataFrame(csa_filename)
-    csa = pd.DataFrame(sc_data[['Filename', 'MEAN(area)']]).rename(columns={'Filename': 'Subject'})
+    csa = pd.DataFrame(sc_data[['Filename', 'MEAN(area)', 'VertLevel', 'DistancePMJ']]).rename(columns={'Filename': 'Subject'})
     # Add a columns with subjects eid from Filename column
     # TODO get distance PMJ, vert level or nerve level
-    csa.loc[:, 'Subject'] = csa['Subject'].str.slice(-43, -32)  # TODO: modifier pour ajouter "ses"
+
+    csa.loc[:, 'Subject'] = (csa['Subject'].str.split('/')).str[-4]  # TODO: modifier pour ajouter "ses"
+
+   # csa.loc[:, 'Subject'] = csa['Subject'].str.slice(-43, -32)  # TODO: modifier pour ajouter "ses"
     # Set index to subject eid
-    csa = csa.set_index('Subject')
+    #csa = csa.set_index('Subject')
     return csa
 
 
@@ -172,7 +175,6 @@ def compute_distance_mean(df):
 def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, filename=None):
     plt.figure()
     fig, ax = plt.subplots(1, 2, sharey=True)
-    #fig, ax = plt.subplots(1, 2)
 
     sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
     ax[0].set_ylabel(y_label)
@@ -192,6 +194,38 @@ def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, f
     plt.close()
 
 
+def compute_stats_csa(csa, level_type):
+    stats = pd.DataFrame(columns=['Subject', 'Mean', 'STD', 'COV', 'Level'])
+    stats['Subject'] = csa['Subject'].unique()
+    grouped=csa.groupby(['Subject'])#.count()
+    csa = csa.set_index('Subject')
+    print(grouped)
+    for subject in stats['Subject']:
+        print(csa.loc[subject, level_type].unique())
+        n_level = np.min(csa.loc[subject, level_type].unique())
+        print(n_level)
+        stats['Levels'] = csa[level_type].unique()
+        for level in range(n_level):
+            csa_level = csa.loc[csa[level_type] == level]
+            stats.loc[subject, 'Mean'] = np.mean(csa_level.loc[subject, ' MEAN(area)'])
+            stats.loc[subject, 'STD'] = np.std(csa_level.loc[subject, ' MEAN(area)'])
+            stats.loc[subject, 'COV'] = np.divide(stats.loc[subject, 'STD'], stats.loc[subject, 'Mean'])
+    print(stats)
+
+
+def analyse_csa(csa_vert, csa_spinal, csa_pmj):
+    plt.figure()
+    fig, ax = plt.subplots(1, 3, sharey=True)
+
+
+def get_csa_files(path_results):
+    path_csa_vert = glob.glob(path_results + "*_vert.csv", recursive=True)
+    path_csa_spinal = glob.glob(path_results + "*_spinal.csv", recursive=True)
+    path_csa_pmj = glob.glob(path_results + "*_pmj.csv", recursive=True)
+
+    return path_csa_vert, path_csa_spinal, path_csa_pmj
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -200,6 +234,28 @@ def main():
     path_distance = os.path.join(args.path_results, "disc_pmj_distance.csv")
     df_distance = csv2dataFrame(path_distance).set_index('Subject')
     compute_distance_mean(df_distance)
+
+    files_vert, files_spinal, files_pmj = get_csa_files(args.path_results)
+
+# TODO: put in a loop
+
+    csa_vert = pd.DataFrame()
+    csa_spinal = pd.DataFrame()
+    csa_pmj = pd.DataFrame()
+
+    for files in files_vert:
+        data = get_csa(files)
+        csa_vert = csa_vert.append(data)
+
+    for files in files_spinal:
+        data = get_csa(files)
+        csa_spinal = csa_spinal.append(data)
+
+    for files in files_pmj:
+        data = get_csa(files)
+        csa_pmj = csa_pmj.append(data)
+
+    compute_stats_csa(csa_vert, 'VertLevel')
 
 if __name__ == '__main__':
     main()
