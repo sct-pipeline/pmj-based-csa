@@ -61,49 +61,76 @@ def compute_distance_mean(df):
     levels = [2, 3, 4, 5, 6, 7]
     methods = ['Distance - PMJ (mm)', 'Distance - Disc (mm)']
     stats = {}
-    df2 = df[["Distance - PMJ (mm)", "Distance - Disc (mm)"]]
-    
-    for contrast in subjects:
-        stats[contrast] = {}
-        for level in levels:
-            stats[contrast][level] = {}
-            for method in methods:
-                stats[contrast][level][method] = {}
-                for metric in metrics:
-                    stats[contrast][level][method][metric] = {}
+    df2 = df[["Nerve", "Distance - PMJ (mm)", "Distance - Disc (mm)"]]
+
+    for method in methods:
+        stats[method] = {}
+        for subject in subjects:
+            stats[method][subject] = {}
+            for metric in metrics:
+                stats[method][subject][metric] = []
     for subject in subjects:
-        for level in levels:
-            for method in methods:
-                sub1 = subject + "_ses-headNormal"
-                sub2 = subject + "_ses-headDown"
-                sub3 = subject + "_ses-headUp"
-                subs = [sub1, sub2, sub3]
-                df.loc[subs, "Subject_id"] = subject
-                stats[subject][level][method]['mean'] = np.mean(df2.loc[subs, method])
-                stats[subject][level][method]['std'] = np.std(df2.loc[subs, method])
-                stats[subject][level][method]['COV'] = stats[subject][level][method]['std']/stats[subject][level][method]['mean']
-    print(stats)
-    scatter_plot_distance(x1=df["Nerve"], y1=df["Distance - PMJ (mm)"], x2=df["Nerve"], y2=df["Distance - Disc (mm)"], hue=df["Subject_id"])
+        for method in methods:
+            sub1 = subject + "_ses-headNormal"
+            sub2 = subject + "_ses-headDown"
+            sub3 = subject + "_ses-headUp"
+            subs = [sub1, sub2, sub3]
+            df.loc[subs, "Subject_id"] = subject
+            for level in levels:
+                df3 = df2.loc[df['Nerve'] == level]
+                df3 = df3.loc[df3.index.intersection(subs)]
+                stats[method][subject]['mean'].append(np.mean(df3[method]))
+                stats[method][subject]['std'].append(np.std(df3[method]))
+            stats[method][subject]['COV'] = np.true_divide(stats[method][subject]['std'], np.abs(stats[method][subject]['mean'])).tolist()
+
+    mean_COV_perlevel = {}
+    cov = []
+    for method in methods:
+        mean_COV_perlevel[method] = np.zeros(6)
+    for method in methods:
+        statistics = list(stats[method].values())
+        i = 0
+        for element in statistics:
+            cov += element['COV']
+            i = i+1
+            mean_COV_perlevel[method] = mean_COV_perlevel[method] + element['COV']
+        mean_COV_perlevel[method] = mean_COV_perlevel[method]/i
+    #cov = np.reshape(cov, (10, 6))
+    #cov_pmj = cov[0:5, :]
+    #cov_disc = cov[5:10, :]
+    new_levels = np.tile(levels, 10)
+    data = pd.DataFrame(columns=['Levels', 'COV', 'Method'])
+    data['Levels'] = new_levels
+    data['COV'] = [x * 100 for x in cov]
+    data['Subject'] = np.tile(np.ravel(np.repeat(subjects, 6)),2)
+    data.loc[0:30, 'Method'] = 'Distance - PMJ (mm)'
+    data.loc[30:60, 'Method'] = 'Distance - Disc (mm)'
+    plt.figure()
+    sns.boxplot(x='Levels', y='COV', data=data, hue='Method', palette="Set3")
+    plt.ylabel('COV (%)')
+    plt.savefig('scatterplot_cov.png')
+    plt.close()
+    scatter_plot_distance(x1=data.loc[0:30, 'Levels'], y1=data.loc[0:30, 'COV'], x2=data.loc[30:60, "Levels"], y2=data.loc[30:60, 'COV'], hue=data['Subject'])
     return stats
     # Add total mean
 
 
 def scatter_plot_distance(x1, y1, x2, y2, hue=None):
     plt.figure()
-    fig, ax = plt.subplots(1, 2)
-    sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=0.7, edgecolors=None, linewidth=0, palette="Spectral")
+    fig, ax = plt.subplots(1, 2, sharey=True)
+    sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
     #ax[0].set_aspect('equal', adjustable='box')
-    ax[0].set_ylabel('Distance (mm)')
+    ax[0].set_ylabel('COV (%)')
     ax[0].set_xlabel('Level')
-    ax[0].set_title('a) Distance PMJ-Nerve Roots perlevel')
+    ax[0].set_title('a) COV PMJ-Nerve Roots perlevel')
     ax[0].set_box_aspect(1)
 
-    sns.scatterplot(ax=ax[1], x=x2, y=y2, hue=hue, alpha=0.8, edgecolors=None, linewidth=0, palette="Spectral")
-    ax[1].set_ylabel('Distance (mm)')
+    sns.scatterplot(ax=ax[1], x=x2, y=y2, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
+    ax[1].set_ylabel('COV (%)')
     ax[1].set_xlabel('Level')
-    ax[1].set_title('b) Distance Disc-Nerve Roots perlevel')
+    ax[1].set_title('b) COV Disc-Nerve Roots perlevel')
     ax[1].set_box_aspect(1)
-    #plt.tight_layout()
+    plt.tight_layout()
     filename = "scatterplot_distance.png"
     plt.savefig(filename)
     plt.close()
@@ -116,11 +143,7 @@ def main():
     # Read distance from nerve rootlets
     path_distance = os.path.join(args.path_results, "disc_pmj_distance.csv")
     df_distance = csv2dataFrame(path_distance).set_index('Subject')
-    print(df_distance.head())
     stats = compute_distance_mean(df_distance)
-    df_stats = pd.DataFrame.from_dict(stats, orient='index').transpose()
-    df_stats.columns = pd.MultiIndex.from_tuples(df_stats.columns)
-    print(df_stats)
 
 if __name__ == '__main__':
     main()
