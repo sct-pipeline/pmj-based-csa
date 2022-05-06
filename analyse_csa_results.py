@@ -14,7 +14,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-plt.style.use('seaborn')
+#plt.style.use('seaborn-whitegrid')
 
 
 def get_parser():
@@ -49,14 +49,9 @@ def get_csa(csa_filename):
     """
     sc_data = csv2dataFrame(csa_filename)
     csa = pd.DataFrame(sc_data[['Filename', 'MEAN(area)', 'VertLevel', 'DistancePMJ']]).rename(columns={'Filename': 'Subject'})
-    # Add a columns with subjects eid from Filename column
-    # TODO get distance PMJ, vert level or nerve level
-
+    csa.replace('None',np.NaN, inplace=True)
+    csa = csa.astype({"MEAN(area)": float})
     csa.loc[:, 'Subject'] = (csa['Subject'].str.split('/')).str[-4]  # TODO: modifier pour ajouter "ses"
-
-   # csa.loc[:, 'Subject'] = csa['Subject'].str.slice(-43, -32)  # TODO: modifier pour ajouter "ses"
-    # Set index to subject eid
-    #csa = csa.set_index('Subject')
     return csa
 
 
@@ -129,17 +124,17 @@ def compute_distance_mean(df):
     data['Levels'] = new_levels
     data['COV'] = [x * 100 for x in cov]
     data['Subject'] = np.tile(np.ravel(np.repeat(subjects, 6)), 2)
-    data.loc[0:30, 'Method'] = 'PMJ'
+    data.loc[0:29, 'Method'] = 'PMJ'
     data.loc[30:60, 'Method'] = 'Disc'
-
     plt.figure()
+    plt.grid()
     plt.title('Coeeficient of variation (COV) of distance among 3 neck positions')
-    sns.boxplot(x='Levels', y='COV', data=data, hue='Method', palette="Set3")
+    sns.boxplot(x='Levels', y='COV', data=data, hue='Method', palette="Set3", showmeans=True)
     plt.ylabel('COV (%)')
     plt.savefig('boxplot_cov.png')
     plt.close()
-    scatter_plot_distance(x1=data.loc[0:30, 'Levels'],
-                          y1=data.loc[0:30, 'COV'],
+    scatter_plot_distance(x1=data.loc[0:29, 'Levels'],
+                          y1=data.loc[0:29, 'COV'],
                           x2=data.loc[30:60, "Levels"],
                           y2=data.loc[30:60, 'COV'],
                           y_label='COV (%)',
@@ -155,14 +150,31 @@ def compute_distance_mean(df):
     data_std['Subject'] = np.tile(np.ravel(np.repeat(subjects, 6)),2)
     data_std.loc[0:30, 'Method'] = 'PMJ'
     data_std.loc[30:60, 'Method'] = 'Disc'
+
+    # Compute Mean of std across subject perlevel
+    std_perlevel_accross_subject_pmj = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
+    std_perlevel_accross_subject_pmj['Mean(STD)'] = data_std.loc[0:29].groupby('Levels')['std'].mean()
+    std_perlevel_accross_subject_pmj['STD(STD)'] = data_std.loc[0:29].groupby('Levels')['std'].std()
+    print('PMJ:', std_perlevel_accross_subject_pmj)
+    print('Mean STD:', std_perlevel_accross_subject_pmj['Mean(STD)'].mean(), '±', std_perlevel_accross_subject_pmj['Mean(STD)'].std(), ' %')
+
+    std_perlevel_accross_subject_disc = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
+    std_perlevel_accross_subject_disc['Mean(STD)'] = data_std.loc[30:60].groupby('Levels')['std'].mean()
+    std_perlevel_accross_subject_disc['STD(STD)'] = data_std.loc[30:60].groupby('Levels')['std'].std()
+    print('DISC:', std_perlevel_accross_subject_disc)
+    print('Mean STD:', std_perlevel_accross_subject_disc['Mean(STD)'].mean(), '±', std_perlevel_accross_subject_disc['Mean(STD)'].std(), ' %')
+
+
+
     plt.figure()
+    plt.grid()
     plt.title('Standard deviation (std) of distance among 3 neck positions')
-    sns.boxplot(x='Levels', y='std', data=data_std, hue='Method', palette="Set3")
+    sns.boxplot(x='Levels', y='std', data=data_std, hue='Method', palette="Set3", showmeans=True)
     plt.ylabel('std (mm)')
     plt.savefig('boxplot_std.png')
     plt.close()
-    scatter_plot_distance(x1=data_std.loc[0:30, 'Levels'],
-                          y1=data_std.loc[0:30, 'std'],
+    scatter_plot_distance(x1=data_std.loc[0:29, 'Levels'],
+                          y1=data_std.loc[0:29, 'std'],
                           x2=data_std.loc[30:60, "Levels"],
                           y2=data_std.loc[30:60, 'std'],
                           hue=data_std['Subject'],
@@ -173,9 +185,8 @@ def compute_distance_mean(df):
 
 
 def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, filename=None):
-    plt.figure()
+    plt.grid()
     fig, ax = plt.subplots(1, 2, sharey=True)
-
     sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
     ax[0].set_ylabel(y_label)
     ax[0].set_xlabel('Level')
@@ -195,27 +206,88 @@ def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, f
 
 
 def compute_stats_csa(csa, level_type):
+    if level_type == 'VertLevel':
+        levels = [2, 3, 4, 5, 6, 7]
+    elif level_type == 'DistancePMJ':
+        levels = [50, 60, 70, 80, 90, 100]
     stats = pd.DataFrame(columns=['Subject', 'Mean', 'STD', 'COV', 'Level'])
-    stats['Subject'] = csa['Subject'].unique()
-    grouped=csa.groupby(['Subject'])#.count()
-    csa = csa.set_index('Subject')
-    print(grouped)
-    for subject in stats['Subject']:
-        print(csa.loc[subject, level_type].unique())
-        n_level = np.min(csa.loc[subject, level_type].unique())
-        print(n_level)
-        stats['Levels'] = csa[level_type].unique()
-        for level in range(n_level):
+    stats = stats.astype({"Mean": float, "STD": float, 'COV': float})
+    stats['Subject'] = np.repeat(csa['Subject'].unique(), 6)
+    stats['Level'] = np.tile(levels, 5)
+    for subject in csa['Subject'].unique():
+        for level in levels:
             csa_level = csa.loc[csa[level_type] == level]
-            stats.loc[subject, 'Mean'] = np.mean(csa_level.loc[subject, ' MEAN(area)'])
-            stats.loc[subject, 'STD'] = np.std(csa_level.loc[subject, ' MEAN(area)'])
-            stats.loc[subject, 'COV'] = np.divide(stats.loc[subject, 'STD'], stats.loc[subject, 'Mean'])
-    print(stats)
+            csa_level.set_index(['Subject'], inplace=True)
+            index = (stats[(stats['Level'] == level) & (stats['Subject'] == subject)].index.tolist())
+            stats.loc[index, 'Mean'] = np.mean(csa_level.loc[subject, 'MEAN(area)'])
+            stats.loc[index, 'STD'] = np.std(csa_level.loc[subject, 'MEAN(area)'])
+            stats.loc[index, 'COV'] = 100*np.divide(stats.loc[index, 'STD'], stats.loc[index, 'Mean'])
+    # Compute Mean and STD across subject perlevel of STD(CSA)
+    std_perlevel_accross_subject = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
+    std_perlevel_accross_subject['Mean(STD)'] = stats.groupby('Level')['STD'].mean()
+    std_perlevel_accross_subject['STD(STD)'] = stats.groupby('Level')['STD'].std()
+
+    # Compute Mean and STD acrosss suject perlevel of COV(CSA)
+    cov_perlevel_accross_subject = pd.DataFrame(columns=['Mean(COV)', 'STD(COV)'])
+    cov_perlevel_accross_subject['Mean(COV)'] = stats.groupby('Level')['COV'].mean()
+    cov_perlevel_accross_subject['STD(COV)'] = stats.groupby('Level')['COV'].std()
+    print('CSA, mean COV perlevel')
+    print(cov_perlevel_accross_subject)
+    # Compute Mean and STD acrosss suject and level of COV(CSA)
+    print('CSA, COV %')
+    print(cov_perlevel_accross_subject['Mean(COV)'].mean(), '±', cov_perlevel_accross_subject['Mean(COV)'].std(), ' %')
+
+    return stats
 
 
 def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     plt.figure()
-    fig, ax = plt.subplots(1, 3, sharey=True)
+    plt.grid()
+    csa = (csa_vert.append(csa_spinal, ignore_index=True)).append(csa_pmj, ignore_index=True)
+    csa.loc[0:29, 'Method'] = 'Disc'
+    csa.loc[30:59, 'Method'] = 'Spinal Roots'
+    csa.loc[60:90, 'Method'] = 'PMJ'
+    plt.title('Coeficient of variation (COV) of CSA among 3 neck positions')
+    sns.boxplot(x='Level', y='COV', data=csa, hue='Method', palette="Set3", showmeans=True)
+    plt.ylabel('COV (%)')
+    plt.savefig('boxplot_csa_COV.png')
+    plt.close()
+
+# Scatter Plot of COV of CSA permethods and perlevel
+    #plt.figure(figsize=(10, 30))
+    fig, ax = plt.subplots(1, 3, sharey=True, figsize=(10,30))
+    y_label = 'COV (%)'
+    sns.scatterplot(ax=ax[0], x=csa.loc[0:29, 'Level'], y=csa.loc[0:29, 'COV'], hue=csa.loc[0:29, 'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
+    ax[0].set_ylabel(y_label)
+    ax[0].set_xlabel('Level')
+    ax[0].set_title('a) COV of CSA with Disc')
+    ax[0].set_box_aspect(1)
+    ax[0].grid(color='lightgray')
+    ax[0].set_axisbelow(True)
+    handles, labels = ax[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='center right', title='Subject')
+    ax[0].get_legend().remove()
+
+    sns.scatterplot(ax=ax[1], x=np.array(csa.loc[30:59, 'Level']), y=csa.loc[30:59, 'COV'], hue=csa.loc[30:59,'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
+    ax[1].set_ylabel(y_label)
+    ax[1].set_xlabel('Level')
+    ax[1].set_title('b) COV of CSA with Spinal Roots')
+    ax[1].set_box_aspect(1)
+    ax[1].grid(color='lightgray')
+    ax[1].set_axisbelow(True)
+
+    sns.scatterplot(ax=ax[2], x=csa.loc[60:90, 'Level'], y=csa.loc[60:90, 'COV'], hue=csa.loc[60:90,'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
+    ax[2].set_ylabel(y_label)
+    ax[2].set_xlabel('Level')
+    ax[2].set_title('b) COV of CSA with PMJ')
+    ax[2].set_box_aspect(1)
+    ax[2].grid(color='lightgray')
+    ax[2].set_axisbelow(True)
+    #plt.legend(loc=(1.04,0))
+    plt.tight_layout(rect=[0,0,0.88,1])
+    filename = "scatterplot_CSA_COV.png"
+    plt.savefig(filename)
+    plt.close()
 
 
 def get_csa_files(path_results):
@@ -245,17 +317,20 @@ def main():
 
     for files in files_vert:
         data = get_csa(files)
-        csa_vert = csa_vert.append(data)
+        csa_vert = csa_vert.append(data, ignore_index=True)
 
     for files in files_spinal:
         data = get_csa(files)
-        csa_spinal = csa_spinal.append(data)
+        csa_spinal = csa_spinal.append(data, ignore_index=True)
 
     for files in files_pmj:
         data = get_csa(files)
-        csa_pmj = csa_pmj.append(data)
+        csa_pmj = csa_pmj.append(data, ignore_index=True)
 
-    compute_stats_csa(csa_vert, 'VertLevel')
+    stats_csa_vert = compute_stats_csa(csa_vert, 'VertLevel')
+    stats_csa_spinal = compute_stats_csa(csa_spinal, 'VertLevel')
+    stats_csa_pmj = compute_stats_csa(csa_pmj, 'DistancePMJ')
+    analyse_csa(stats_csa_vert, stats_csa_spinal, stats_csa_pmj)
 
 if __name__ == '__main__':
     main()
