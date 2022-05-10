@@ -132,7 +132,7 @@ sct_flatten_sagittal -i ${file_t2}.nii.gz -s ${file_t2_seg}.nii.gz
 
 # Compute average cord CSA between
 # Get slices to compute vertebral CSA
-slices_vert=($(python $PATH_SCRIPT/get_disc_slice.py -label ${file_t2_seg}_labeled_discs_vert.nii.gz))
+slices_vert=($(python $PATH_SCRIPT/get_disc_slice.py -label ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}))
 for slices in "${slices_vert[@]}";do
   sct_process_segmentation -i ${file_t2_seg}.nii.gz -z $slices -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_vert.csv -append 1
 done
@@ -154,7 +154,7 @@ sct_label_vertebrae -i ${file_t2}.nii.gz -s ${file_t2_seg}.nii.gz -discfile ${fi
 file_t2_seg_labeled_nerve="${file_t2_seg}_labeled"
 
 # Get z slices of vertebral labels
-slices_nerves=($(python $PATH_SCRIPT/get_disc_slice.py -label ${file_t2_seg}_labeled_discs.nii.gz))
+slices_nerves=($(python $PATH_SCRIPT/get_disc_slice.py -label ${file_t2_seg}_labeled_discs.nii.gz -o ${PATH_RESULTS}))
 for slices_nerv in "${slices_nerves[@]}";do
   sct_process_segmentation -i ${file_t2_seg}.nii.gz -z $slices_nerv -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_spinal.csv -append 1
 done

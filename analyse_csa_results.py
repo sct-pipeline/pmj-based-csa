@@ -48,10 +48,10 @@ def get_csa(csa_filename):
 
     """
     sc_data = csv2dataFrame(csa_filename)
-    csa = pd.DataFrame(sc_data[['Filename', 'MEAN(area)', 'VertLevel', 'DistancePMJ']]).rename(columns={'Filename': 'Subject'})
+    csa = pd.DataFrame(sc_data[['Filename', 'MEAN(area)', 'Slice (I->S)']]).rename(columns={'Filename': 'Subject'})
     csa.replace('None',np.NaN, inplace=True)
     csa = csa.astype({"MEAN(area)": float})
-    csa.loc[:, 'Subject'] = (csa['Subject'].str.split('/')).str[-4]  # TODO: modifier pour ajouter "ses"
+    csa.loc[:, 'Subject'] = (csa['Subject'].str.split('/')).str[-4]
     return csa
 
 
@@ -317,16 +317,18 @@ def main():
 
     for files in files_vert:
         data = get_csa(files)
+        data['Levels'] = np.arange(len(data), 0, -1)
         csa_vert = csa_vert.append(data, ignore_index=True)
 
     for files in files_spinal:
         data = get_csa(files)
+        data['Levels'] = np.arange(len(data)+1, 1, -1)
         csa_spinal = csa_spinal.append(data, ignore_index=True)
+    print(csa_spinal.loc[csa_spinal['Subject']=='sub-006'])
 
     for files in files_pmj:
         data = get_csa(files)
         csa_pmj = csa_pmj.append(data, ignore_index=True)
-
     stats_csa_vert = compute_stats_csa(csa_vert, 'VertLevel')
     stats_csa_spinal = compute_stats_csa(csa_spinal, 'VertLevel')
     stats_csa_pmj = compute_stats_csa(csa_pmj, 'DistancePMJ')

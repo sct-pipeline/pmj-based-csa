@@ -7,6 +7,7 @@ import argparse
 import csv
 import numpy as np
 import nibabel as nib
+import pandas as pd
 import os
 import sys
 import logging
@@ -27,9 +28,8 @@ def get_parser():
         description="Compute distance between C2-C3 intervertebral disc and PMJ. Outputs .csv file with results. | Orientation needs to be RPI")
     parser.add_argument('-label', required=True, type=str,
                         help="Nifti file of the vertebral or nerve labels.")
-    parser.add_argument('-o', required=False, type=str,
-                        default='pmj_disc_distance.csv',
-                        help="Output csv filename.")
+    parser.add_argument('-o', required=True, type=str,
+                        help="Path to save labels corespondances.")
 
     return parser
 
@@ -55,13 +55,15 @@ def main():
     label = label.get_fdata()[np.where(label.get_fdata() != 0)]
     z = []
     i = 0
+    log = pd.DataFrame(columns=['File', 'Level', 'Slices'])
     for label_idx in label_index:
         idx_low = label_idx - 1
         idz_high = label_idx + 1
         range = '{}:{}'.format(idx_low, idz_high)
-        #logger.info('{}, {}:{}'.format(label[i], idx_low, idz_high))
+        log = log.append({'File': args.label, 'Level': label[i], 'Slices': '{}:{}'.format(idx_low, idz_high)}, ignore_index=True)
         z.append(range)
         i = i + 1
+    log.to_csv(os.path.join(os.path.abspath(args.o), args.label[0:20]+'_labels.csv'))
     import sys
     returnStr = ''
     for item in z:
