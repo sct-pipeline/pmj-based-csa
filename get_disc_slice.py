@@ -63,7 +63,7 @@ def main():
         log = log.append({'File': args.label, 'Level': label[i], 'Slices': '{}:{}'.format(idx_low, idz_high)}, ignore_index=True)
         z.append(range)
         i = i + 1
-    log.to_csv(os.path.join(os.path.abspath(args.o), args.label[0:20]+'_labels.csv'))
+    log.to_csv(os.path.join(os.path.abspath(args.o), args.label +'_labels.csv'))
     import sys
     returnStr = ''
     for item in z:
