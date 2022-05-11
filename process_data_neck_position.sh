@@ -140,12 +140,12 @@ done
 # Detect PMJ
 detect_pmj_if_does_not_exist $file_t2 $file_t2_seg
 # Compute average cord CSA 64 mm of PMJ
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 50 -pmj-extent 3 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 60 -pmj-extent 3 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 70 -pmj-extent 3 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 80 -pmj-extent 3 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 90 -pmj-extent 3 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 100 -pmj-extent 3 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 50 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 60 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 70 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 80 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 90 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 100 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
 
 # Compute average cord CSA  at spinal levels
 file_nerve="${PATH_DATA}/derivatives/labels/${SUBJECT}/${folder_contrast}/${file_t2}_labels-spinalroots-manual"
