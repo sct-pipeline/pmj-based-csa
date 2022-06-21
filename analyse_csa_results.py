@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 import logging
 
-FNAME_LOG= 'log.txt'
+FNAME_LOG = 'log.txt'
 
 # Initialize logging
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ def get_csa(csa_filename):
     """
     sc_data = csv2dataFrame(csa_filename)
     csa = pd.DataFrame(sc_data[['Filename', 'MEAN(area)', 'Slice (I->S)', 'DistancePMJ']]).rename(columns={'Filename': 'Subject'})
-    csa.replace('None',np.NaN, inplace=True)
+    csa.replace('None', np.NaN, inplace=True)
     csa = csa.astype({"MEAN(area)": float})
     csa.loc[:, 'Subject'] = (csa['Subject'].str.split('/')).str[-4]
     return csa
@@ -216,9 +216,9 @@ def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, f
 def compute_stats_csa(csa, level_type):
     csa.drop(csa.index[csa['Subject'] == 'sub-002'], inplace=True)
     if level_type == 'Levels':
-        levels = [2, 3, 4, 5, 6, 7]
-    elif level_type == 'DistancePMJ':
-        levels = [50, 60, 70, 80, 90, 100]
+        levels = [2, 3, 4, 5, 6, 7]  # To change if so!!
+    elif level_type == 'DistancePMJ':  # To change if so!!
+        levels = [50, 60, 70, 80, 90, 100]  # To change!!!
     stats = pd.DataFrame(columns=['Subject', 'Mean', 'STD', 'COV', 'Level'])
     stats = stats.astype({"Mean": float, "STD": float, 'COV': float})
     stats['Subject'] = np.repeat(csa['Subject'].unique(), 6)
