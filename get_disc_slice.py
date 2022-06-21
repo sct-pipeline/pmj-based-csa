@@ -12,16 +12,6 @@ import os
 import sys
 import logging
 
-FNAME_LOG= 'log_label_slices.txt'
-
-
-# Initialize logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  # default: logging.DEBUG, logging.INFO
-hdlr = logging.StreamHandler(sys.stdout)
-logging.root.addHandler(hdlr)
-
-
 
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -42,13 +32,6 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
     
-    # Dump log file there
-    if os.path.exists(FNAME_LOG):
-        os.remove(FNAME_LOG)
-    fh = logging.FileHandler(os.path.join(os.path.abspath(os.curdir), FNAME_LOG))
-    logging.root.addHandler(fh)
-    #logger.info('{}'.format(args.label))
-
     label = nib.load(args.label)
     # Get discs labels
     label_index = np.where(label.get_fdata() != 0)[-1]
@@ -64,7 +47,7 @@ def main():
         z.append(range)
         i = i + 1
     log.to_csv(os.path.join(os.path.abspath(args.o), args.label +'_labels.csv'))
-    import sys
+    
     returnStr = ''
     for item in z:
         returnStr += str(item)+' '
