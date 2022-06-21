@@ -215,19 +215,24 @@ def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, f
 
 def compute_stats_csa(csa, level_type):
     csa.drop(csa.index[csa['Subject'] == 'sub-002'], inplace=True)
-    if level_type == 'Levels':
-        levels = [2, 3, 4, 5, 6, 7]  # To change if so!!
-    elif level_type == 'DistancePMJ':  # To change if so!!
-        levels = [50, 60, 70, 80, 90, 100]  # To change!!!
     stats = pd.DataFrame(columns=['Subject', 'Mean', 'STD', 'COV', 'Level'])
     stats = stats.astype({"Mean": float, "STD": float, 'COV': float})
     stats['Subject'] = np.repeat(csa['Subject'].unique(), 6)
+    levels = [2, 3, 4, 5, 6, 7]
     stats['Level'] = np.tile(levels, 5)
+    
     for subject in csa['Subject'].unique():
-        for level in levels:
+        if level_type == 'DistancePMJ':
+            #csa.set_index()
+            levels_pmj = np.unique(csa.loc[csa.index[csa['Subject'] == subject], level_type]).tolist()
+            if len(levels_pmj) > 6:  # Only use 6 levels
+                levels_pmj = levels_pmj[:-1]
+        else:
+            levels_pmj = levels
+        for level in levels_pmj:
             csa_level = csa.loc[csa[level_type] == level]
             csa_level.set_index(['Subject'], inplace=True)
-            index = (stats[(stats['Level'] == level) & (stats['Subject'] == subject)].index.tolist())
+            index = (stats[(stats['Level'] == levels[levels_pmj.index(level)]) & (stats['Subject'] == subject)].index.tolist())
             stats.loc[index, 'Mean'] = np.mean(csa_level.loc[subject, 'MEAN(area)'])
             stats.loc[index, 'STD'] = np.std(csa_level.loc[subject, 'MEAN(area)'])
             stats.loc[index, 'COV'] = 100*np.divide(stats.loc[index, 'STD'], stats.loc[index, 'Mean'])
