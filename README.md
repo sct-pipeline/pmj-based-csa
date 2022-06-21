@@ -56,14 +56,12 @@ cd pmj-based-csa
 sct_run_batch -jobs -1 -path-data <PATH_DATA> -path-out ~/pmj-based-cas_results-method-1 -script process_data_neck_position.sh
 ~~~
 
-For method 2: 
 ~~~
-cp csa_pmj_extrapolation.py $SCT_DIR/spinalcordtoolbox/csa_pmj.py
-sct-run_batch -jobs -1 -path-data <PATH_DATA> -path-out ~/pmj-based-cas_results-method-2 -script process_data_neck_position.sh
+sct_run_batch -jobs -1 -path-data ~/duke/projects/pmj/pmj_csa/pmj-data-BIDS/ -path-out ~/pmj-based-csa_results-2022-06-21-06 -script process_data_neck_position.sh
 ~~~
 
-To remove the added file of your current SCT, run the following line:
+To run analysis
+
 ~~~
-cd $SCT_DIR
-git restore spinalcordtoolbox/csa_pmj.py
+/mnt/c/Users/sb199/pmj-based-csa/analyse_csa_results.py -path-results /mnt/v/pmj-based-csa_results-2022-06-21-06/results/
 ~~~
