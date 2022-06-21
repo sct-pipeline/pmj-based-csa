@@ -45,9 +45,7 @@ def main():
     distance_nerve = dist.loc[dist.index.intersection(subs)]
     distance_nerve.sort_values(by=['Nerve'], inplace=True)
     distance_nerve.dropna(inplace=True)
-    print(distance_nerve)
     mean = distance_nerve.groupby('Nerve').mean()
-    print(mean)
     returnStr = ''
     for item in mean['Distance - PMJ (mm)']:
         returnStr += str(np.round(item, 1))+' '
