@@ -130,27 +130,9 @@ sct_qc -i ${file_t2}.nii.gz -s ${file_t2_seg_labeled}.nii.gz -p sct_label_verteb
 # Flatten scan along R-L direction (to make nice figures)
 sct_flatten_sagittal -i ${file_t2}.nii.gz -s ${file_t2_seg}.nii.gz
 
-# Compute average cord CSA between
-# Get slices to compute vertebral CSA
-slices_vert=($(python $PATH_SCRIPT/get_disc_slice.py -label ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}))
-for slices in "${slices_vert[@]}";do
-  sct_process_segmentation -i ${file_t2_seg}.nii.gz -z $slices -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_vert.csv -append 1
-done
 
 # Detect PMJ
 detect_pmj_if_does_not_exist $file_t2 $file_t2_seg
-
-# Compute distance between PMJ and intervertebral discs
-python $PATH_SCRIPT/get_distance_pmj_disc.py -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}/disc_pmj_distance.csv -spinalroots ${file_t2_seg}_labeled_discs.nii.gz -subject ${SUBJECT_ID}_${SES}
-
-# Compute average cord CSA at distance from each nerve from PMJ
-# Get z slices of vertebral labels
-dist_nerves_pmj=($(python $PATH_SCRIPT/get_mean_nerve_dist.py -file-distance ${PATH_RESULTS}/disc_pmj_distance_to_use.csv -subject ${SUBJECT_ID}))
-for dist_nerv in "${dist_nerves_pmj[@]}";do
-  sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance $dist_nerv -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
-done
-
-#sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 50 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
 
 # Compute average cord CSA  at spinal levels
 file_nerve="${PATH_DATA}/derivatives/labels/${SUBJECT}/${folder_contrast}/${file_t2}_labels-spinalroots-manual"
@@ -163,6 +145,26 @@ slices_nerves=($(python $PATH_SCRIPT/get_disc_slice.py -label ${file_t2_seg}_lab
 for slices_nerv in "${slices_nerves[@]}";do
   sct_process_segmentation -i ${file_t2_seg}.nii.gz -z $slices_nerv -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_spinal.csv -append 1
 done
+
+# Compute distance between PMJ and intervertebral discs
+python $PATH_SCRIPT/get_distance_pmj_disc.py -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}/disc_pmj_distance.csv -spinalroots ${file_t2_seg}_labeled_discs.nii.gz -subject ${SUBJECT_ID}_${SES}
+
+# Compute average cord CSA between
+# Get slices to compute vertebral CSA
+slices_vert=($(python $PATH_SCRIPT/get_disc_slice.py -label ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}))
+for slices in "${slices_vert[@]}";do
+  sct_process_segmentation -i ${file_t2_seg}.nii.gz -z $slices -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_vert.csv -append 1
+done
+
+# Compute average cord CSA at distance from each nerve from PMJ
+# Get z slices of vertebral labels
+dist_nerves_pmj=($(python $PATH_SCRIPT/get_mean_nerve_dist.py -file-distance disc_pmj_distance_to_use.csv -subject ${SUBJECT_ID}))
+for dist_nerv in "${dist_nerves_pmj[@]}";do
+  sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance $dist_nerv -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+done
+
+#sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance 50 -pmj-extent 2 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+
 
 
 # Verify presence of output files and write log file if error
