@@ -11,6 +11,7 @@ import csv
 import numpy as np
 import nibabel as nib
 import os
+import sys
 
 NEAR_ZERO_THRESHOLD = 1e-6
 
@@ -83,16 +84,16 @@ def main():
     arr_distance = get_distance_from_pmj(centerline, centerline[2].argmax(), px, py, pz)
     # Get discs labels
     discs_index = np.where(disc_label.get_fdata() != 0)[-1]
-    discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() != 0)]
+    discs = disc_label.get_fdata()[np.where(disc_label.get_fdata() != 0)].tolist()
     nerve_index = np.where(nerve_label.get_fdata() != 0)[-1]
     nerves = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() != 0)]
     nerves = list(map(int, nerves))
-    discs = np.sort(discs, None)
-    nerves_srt = np.sort(nerves, None)
+    #discs = np.sort(discs, None)
+    #nerves_srt = np.sort(nerves, None)
     for j in range(len(nerves)):
-        nerve = nerves_srt[j]
-        disc = discs[nerve - 1]
-        disc_index_corr = np.abs(centerline[2] - discs_index[nerve - 1]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
+        nerve = nerves[j]
+        disc = discs[discs.index(nerve)]
+        disc_index_corr = np.abs(centerline[2] - discs_index[discs.index(nerve)]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
         nerve2_index_corr = np.abs(centerline[2] - nerve_index[j]).argmin()
         distance_disc_nerve = arr_distance[:, disc_index_corr][0] - arr_distance[:, nerve2_index_corr][0]  # Disc to nerve
         subject = args.subject
@@ -107,7 +108,6 @@ def main():
             spamwriter = csv.writer(csvfile, delimiter=',')
             line = [subject, nerve, disc, distance_pmj_nerve, distance_disc_nerve]
             spamwriter.writerow(line)
-
     for i in range(len(nerves)):
         # Get the index of centerline array disc
         nerve = nerves[i]
