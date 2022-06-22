@@ -63,7 +63,7 @@ The data processing includes:
 To launch processing, run:
 ~~~
 cd pmj-based-csa
-sct_run_batch -jobs -1 -path-data <PATH_DATA> -path-out ~/pmj-based-csa_results -script process_data_neck_position.sh
+sct_run_batch -jobs -1 -path-data <PATH_DATA> -path-out ~/pmj-based-csa_results -script process_data.sh
 ~~~
 
 To copmute the statistics about the distances and CSA, run the following command:
