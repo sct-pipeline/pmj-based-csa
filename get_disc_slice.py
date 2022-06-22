@@ -1,39 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
-# This scripts returns the slices to compute CSA with a 3 slice extent from labels
+# This scripts returns the slices (I-S) to compute CSA with a 3 slice extent from labels (discs or spinal rootlets)
 # Author: Sandrine Bédard
 
 import argparse
-import csv
 import numpy as np
 import nibabel as nib
 import pandas as pd
 import os
 import sys
-import logging
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Compute distance between C2-C3 intervertebral disc and PMJ. Outputs .csv file with results. | Orientation needs to be RPI")
+        description="Get the slices in (I-S) from label file with a 3 slice extent. Returns a list of the slice range. Example: 2:4")
     parser.add_argument('-label', required=True, type=str,
-                        help="Nifti file of the vertebral or nerve labels.")
+                        help="Nifti file of the disc or nerve labels.")
     parser.add_argument('-o', required=True, type=str,
                         help="Path to save labels corespondances.")
 
     return parser
 
-def save_Nifti1(data, original_image, filename):
-    empty_header = nib.Nifti1Header()
-    image = nib.Nifti1Image(data, original_image.affine, empty_header)
-    nib.save(image, filename)
 
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    
+    # Read label file
     label = nib.load(args.label)
-    # Get discs labels
+    # Get labels
     label_index = np.where(label.get_fdata() != 0)[-1]
     label = label.get_fdata()[np.where(label.get_fdata() != 0)]
     z = []
@@ -46,8 +40,8 @@ def main():
         log = log.append({'File': args.label, 'Level': label[i], 'Slices': '{}:{}'.format(idx_low, idz_high)}, ignore_index=True)
         z.append(range)
         i = i + 1
-    log.to_csv(os.path.join(os.path.abspath(args.o), args.label +'_labels.csv'))
-    
+    log.to_csv(os.path.join(os.path.abspath(args.o), args.label + '_labels.csv'))
+    # Create a list of string with the ranges to use in process_data.sh
     returnStr = ''
     for item in z:
         returnStr += str(item)+' '
@@ -57,4 +51,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
