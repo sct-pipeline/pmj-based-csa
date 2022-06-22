@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
-# Compute distance between PMJ and C2-C3 disc along centerline
+# Compute distance between nerve rootlets and PMJ, nerve rootlet and discs along centerline
 #
 # For usage, type: python get_distance_pmj_dics -h
 
@@ -11,14 +11,11 @@ import csv
 import numpy as np
 import nibabel as nib
 import os
-import sys
-
-NEAR_ZERO_THRESHOLD = 1e-6
 
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Compute distance between C2-C3 intervertebral disc and PMJ. Outputs .csv file with results. | Orientation needs to be RPI")
+        description="Compute distance between each intervertebral disc and nerve rootlet, and PMJ to nerve rootlets. Outputs .csv file with results. | Orientation needs to be RPI")
     parser.add_argument('-centerline', required=True, type=str,
                         help=".csv file of the centerline.")
     parser.add_argument('-disclabel', required=True, type=str,
@@ -62,7 +59,6 @@ def get_distance_from_pmj(centerline_points, z_index, px, py, pz):
     arr_length = np.stack((arr_length, centerline_points[2][:z_index + 1]), axis=0)
     return arr_length
 
-#def get_distance_discs_nerve(discs, nerve):
 
 
 def main():

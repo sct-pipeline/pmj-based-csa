@@ -364,5 +364,6 @@ def main():
     stats_csa_pmj = compute_stats_csa(csa_pmj, 'DistancePMJ')
     analyse_csa(stats_csa_vert, stats_csa_spinal, stats_csa_pmj)
 
+
 if __name__ == '__main__':
     main()
