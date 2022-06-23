@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
-# Compute distance between nerve rootlets and PMJ, nerve rootlet and discs along centerline
+# Compute distance between nerve rootlets and PMJ, nerve rootlets and discs along centerline
 #
 # For usage, type: python get_distance_pmj_dics -h
 
@@ -60,7 +60,6 @@ def get_distance_from_pmj(centerline_points, z_index, px, py, pz):
     return arr_length
 
 
-
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -84,8 +83,7 @@ def main():
     nerve_index = np.where(nerve_label.get_fdata() != 0)[-1]
     nerves = nerve_label.get_fdata()[np.where(nerve_label.get_fdata() != 0)]
     nerves = list(map(int, nerves))
-    #discs = np.sort(discs, None)
-    #nerves_srt = np.sort(nerves, None)
+
     for j in range(len(nerves)):
         nerve = nerves[j]
         disc = discs[discs.index(nerve)]

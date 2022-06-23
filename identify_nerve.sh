@@ -68,7 +68,6 @@ detect_pmj_if_does_not_exist(){
     echo "Not found. Proceeding with automatic labeling."
     # Detect PMJ
     sct_detect_pmj -i ${file}.nii.gz -c t2 -qc ${PATH_QC}
-    #sct_detect_pmj -i ${file}.nii.gz -c t2 -s ${file_seg}.nii.gz -qc ${PATH_QC}
 
   fi
 }
@@ -88,14 +87,13 @@ cd ${PATH_DATA_PROCESSED}
 # Copy source images
 mkdir -p ${SUBJECT}
 rsync -avzh $PATH_DATA/$SUBJECT/ ${SUBJECT}
+
 # Go to anat folder where all structural data are located
-echo $PWD
-
 cd ${SUBJECT}/anat/
-
 
 file_t2="${SUBJECT_ID}_${SES}_T2w"
 
+# Reorient to RPI
 sct_image -i ${file_t2}.nii.gz -setorient RPI -o ${file_t2}.nii.gz
 
 # Segment spinal cord (only if it does not exist)
