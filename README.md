@@ -1,7 +1,13 @@
 # PMJ-based CSA
 CSA measure based on distance from pontomedullary junction (PMJ)
+# Table of contents 
+* [Data collection and organization](#data-collection-and-organization)
+* [ Manual labeling of spinal cord rootlets with FSLeyes](#manual-labeling-of-spinal-cord-rootlets-with-FSLeyes)
+    * [Installation](#installation)
+    * [Run manual labeling script](#run-manual-labeling-script)
+* [Analysis pipeline](#analysis-pipeline)
 
-# Data
+# Data collection and organization
 The data is currently stored in our internal datas server under `~/duke/projects/pmj/pmj_csa/pmj-data-BIDS/`
 
 # Manual labeling of spinal cord rootlets with FSLeyes
