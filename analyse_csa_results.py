@@ -72,7 +72,7 @@ def compute_distance_mean(df):
 
     """
     # Retreive subjects ID: (TODO: consider removing)
-    subjects = ["sub-003", "sub-004", "sub-005", "sub-006", "sub-007"]
+    subjects = ["sub-002", "sub-003", "sub-004", "sub-005", "sub-006", "sub-007"]
     metrics = ['mean', 'std', 'COV']
     levels = [2, 3, 4, 5, 6, 7]
     methods = ['Distance - PMJ (mm)', 'Distance - Disc (mm)']
@@ -253,7 +253,7 @@ def compute_stats_csa(csa, level_type):
 
     """
 
-    csa.drop(csa.index[csa['Subject'] == 'sub-002'], inplace=True)  # Remove subject sub-002 since doesn't have the same resolution
+    # csa.drop(csa.index[csa['Subject'] == 'sub-002'], inplace=True)  # Remove subject sub-002 since doesn't have the same resolution
     stats = pd.DataFrame(columns=['Subject', 'Mean', 'STD', 'COV', 'Level'])
     stats = stats.astype({"Mean": float, "STD": float, 'COV': float})
     stats['Subject'] = np.repeat(csa['Subject'].unique(), 6)
