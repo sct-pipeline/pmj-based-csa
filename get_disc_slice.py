@@ -34,8 +34,8 @@ def main():
     i = 0
     log = pd.DataFrame(columns=['File', 'Level', 'Slices'])
     for label_idx in label_index:
-        idx_low = label_idx - 1
-        idz_high = label_idx + 1
+        idx_low = label_idx - 2
+        idz_high = label_idx + 2
         range = '{}:{}'.format(idx_low, idz_high)
         log = log.append({'File': args.label, 'Level': label[i], 'Slices': '{}:{}'.format(idx_low, idz_high)}, ignore_index=True)
         z.append(range)
