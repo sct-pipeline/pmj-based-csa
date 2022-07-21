@@ -92,6 +92,7 @@ def main():
             distance_disc_nerve = arr_distance[:, disc_index_corr][0] - arr_distance[:, nerve2_index_corr][0]  # Disc to nerve
         else:
             distance_disc_nerve = np.NaN
+            disc = np.NaN
         subject = args.subject
         fname_out = args.o
         distance_pmj_nerve = np.NaN
