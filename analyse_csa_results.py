@@ -72,7 +72,7 @@ def compute_distance_mean(df):
 
     """
     # Retreive subjects ID: (TODO: consider removing)
-    subjects = ["sub-002", "sub-003", "sub-004", "sub-005", "sub-006", "sub-007"]
+    subjects = ["sub-002", "sub-003", "sub-004", "sub-005", "sub-006", "sub-007", "sub-008", "sub-009", "sub-010", "sub-011"]
     metrics = ['mean', 'std', 'COV']
     levels = [2, 3, 4, 5, 6, 7]
     methods = ['Distance - PMJ (mm)', 'Distance - Disc (mm)']
@@ -138,7 +138,7 @@ def compute_distance_mean(df):
     mean_std_perlevel_disc = mean_std_perlevel_disc/i
     mean_COV_perlevel_disc = mean_COV_perlevel_disc/i
 
-    new_levels = np.tile(levels, 12)
+    new_levels = np.tile(levels, 20)
     data = pd.DataFrame(columns=['Levels', 'COV', 'Method'])
     data['Levels'] = new_levels
     data['COV'] = [x * 100 for x in cov]
@@ -168,19 +168,19 @@ def compute_distance_mean(df):
     data_std['Levels'] = new_levels
     data_std['std'] = std
     data_std['Subject'] = np.tile(np.ravel(np.repeat(subjects, 6)), 2)
-    data_std.loc[0:30, 'Method'] = 'PMJ'
-    data_std.loc[30:60, 'Method'] = 'Disc'
+    data_std.loc[0:59, 'Method'] = 'PMJ' # Why 30 and not 35??
+    data_std.loc[60:119, 'Method'] = 'Disc' # Why 30 and not 35??
 
     # Compute Mean of std across subject perlevel for PMJ and disc distances
     std_perlevel_accross_subject_pmj = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
-    std_perlevel_accross_subject_pmj['Mean(STD)'] = data_std.loc[0:35].groupby('Levels')['std'].mean()
-    std_perlevel_accross_subject_pmj['STD(STD)'] = data_std.loc[0:35].groupby('Levels')['std'].std()
+    std_perlevel_accross_subject_pmj['Mean(STD)'] = data_std.loc[0:59].groupby('Levels')['std'].mean()
+    std_perlevel_accross_subject_pmj['STD(STD)'] = data_std.loc[0:59].groupby('Levels')['std'].std()
     logger.info('PMJ: {}'.format(std_perlevel_accross_subject_pmj))
     logger.info('Mean STD: {} ± {}'.format(std_perlevel_accross_subject_pmj['Mean(STD)'].mean(), std_perlevel_accross_subject_pmj['Mean(STD)'].std()))
 
     std_perlevel_accross_subject_disc = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
-    std_perlevel_accross_subject_disc['Mean(STD)'] = data_std.loc[30:60].groupby('Levels')['std'].mean()
-    std_perlevel_accross_subject_disc['STD(STD)'] = data_std.loc[30:60].groupby('Levels')['std'].std()
+    std_perlevel_accross_subject_disc['Mean(STD)'] = data_std.loc[60:119].groupby('Levels')['std'].mean() # Why 30 and not 35??
+    std_perlevel_accross_subject_disc['STD(STD)'] = data_std.loc[60:119].groupby('Levels')['std'].std()
     logger.info('DISC: {}'.format(std_perlevel_accross_subject_disc))
     logger.info('Mean STD: {} ± {}'.format(std_perlevel_accross_subject_disc['Mean(STD)'].mean(), std_perlevel_accross_subject_disc['Mean(STD)'].std()))
 
@@ -192,10 +192,10 @@ def compute_distance_mean(df):
     plt.ylabel('std (mm)')
     plt.savefig('boxplot_std.png')
     plt.close()
-    scatter_plot_distance(x1=data_std.loc[0:35, 'Levels'],
-                          y1=data_std.loc[0:35, 'std'],
-                          x2=data_std.loc[36:71, "Levels"],
-                          y2=data_std.loc[36:71, 'std'],
+    scatter_plot_distance(x1=data_std.loc[0:59, 'Levels'],
+                          y1=data_std.loc[0:59, 'std'],
+                          x2=data_std.loc[60:119, "Levels"],
+                          y2=data_std.loc[60:119, 'std'],
                           hue=data_std['Subject'],
                           y_label='std (mm)',
                           title_1='a) STD PMJ-Nerve Roots perlevel',
@@ -222,7 +222,7 @@ def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, f
     """
     plt.grid()
     fig, ax = plt.subplots(1, 2, sharey=True)
-    sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
+    sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral") # Spectral
     ax[0].set_ylabel(y_label)
     ax[0].set_xlabel('Level')
     ax[0].set_title(title_1)
@@ -253,13 +253,12 @@ def compute_stats_csa(csa, level_type):
 
     """
 
-    # csa.drop(csa.index[csa['Subject'] == 'sub-002'], inplace=True)  # Remove subject sub-002 since doesn't have the same resolution
     stats = pd.DataFrame(columns=['Subject', 'Mean', 'STD', 'COV', 'Level'])
     stats = stats.astype({"Mean": float, "STD": float, 'COV': float})
     stats['Subject'] = np.repeat(csa['Subject'].unique(), 6)
     levels = [2, 3, 4, 5, 6, 7]
     stats['Level'] = np.tile(levels, 6)
-    # Loop rhough subjects
+    # Loop through subjects
     for subject in csa['Subject'].unique():
         if level_type == 'DistancePMJ':
             levels_pmj = np.unique(csa.loc[csa.index[csa['Subject'] == subject], level_type]).tolist()
@@ -283,6 +282,8 @@ def compute_stats_csa(csa, level_type):
     cov_perlevel_accross_subject = pd.DataFrame(columns=['Mean(COV)', 'STD(COV)'])
     cov_perlevel_accross_subject['Mean(COV)'] = stats.groupby('Level')['COV'].mean()
     cov_perlevel_accross_subject['STD(COV)'] = stats.groupby('Level')['COV'].std()
+    logger.info('Mean CSA perlevel:')
+    logger.info(stats.groupby('Level')['Mean'].mean())
     logger.info('CSA, mean COV perlevel')
     logger.info(cov_perlevel_accross_subject)
     # Compute Mean and STD acrosss suject and level of COV(CSA)
@@ -306,7 +307,7 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     plt.figure()
     plt.grid()
     csa = (csa_vert.append(csa_spinal, ignore_index=True)).append(csa_pmj, ignore_index=True)
-    csa.loc[0:35, 'Method'] = 'Disc'
+    csa.loc[0:35, 'Method'] = 'Disc' # TODO change according to number of subject --> maybe automate
     csa.loc[36:71, 'Method'] = 'Spinal Roots'
     csa.loc[72:108, 'Method'] = 'PMJ'
     plt.title('Coeficient of variation (COV) of CSA among 3 neck positions')
