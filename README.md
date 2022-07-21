@@ -24,10 +24,9 @@ cd pmj-based-csa
 ~~~
 2. Run the correction script specifying `path-data` and `path-output`
 ~~~
-sct_run_batch -jobs -1 -path-data <PATH-DATA> -path-output ~/pmj_csa_nerve_roots_results -script identify_nerve.sh
+sct_run_batch -jobs 3 -path-data <PATH-DATA> -path-output ~/pmj_csa_nerve_roots_results -script identify_nerve.sh
 ~~~
-
-An FSLeyes window will open and the following steps are in FSLeyes.
+Wait until the 3 images of the same subject (headDown, headUp, headNormal) open in FSLeyes, follow the steps:
 
 4. Click on: *Tools → Edit mode*
 5. Click on: *Edit (ortho view) → Create mask*
