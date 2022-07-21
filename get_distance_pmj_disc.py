@@ -85,13 +85,14 @@ def main():
     nerves = list(map(int, nerves))
     for j in range(len(nerves)):
         nerve = nerves[j]
+        print(discs.index(nerve))
         if discs.index(nerve):
             disc = discs[discs.index(nerve)]
             disc_index_corr = np.abs(centerline[2] - discs_index[discs.index(nerve)]).argmin()  # centerline doesn't necessarly start at the index 0 if the segmentation is incomplete
             nerve2_index_corr = np.abs(centerline[2] - nerve_index[j]).argmin()
             distance_disc_nerve = arr_distance[:, disc_index_corr][0] - arr_distance[:, nerve2_index_corr][0]  # Disc to nerve
         else:
-            distance_disc_nerve = np.Nan
+            distance_disc_nerve = np.NaN
         subject = args.subject
         fname_out = args.o
         distance_pmj_nerve = np.NaN
