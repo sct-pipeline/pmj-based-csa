@@ -170,7 +170,7 @@ done
 dist_nerves_pmj=($(python $PATH_SCRIPT/get_mean_nerve_dist.py -file-distance ${PATH_SCRIPT}/disc_pmj_distance_to_use.csv -subject ${SUBJECT_ID}))
 # Compute average cord CSA at distance from each nerve from PMJ with a 3 slice extent (or 1.8 mm)
 for dist_nerv in "${dist_nerves_pmj[@]}";do
-  sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance $dist_nerv -pmj-extent 3 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
+  sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance $dist_nerv -pmj-extent 1.8 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
 done
 
 
