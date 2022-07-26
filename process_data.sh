@@ -175,7 +175,7 @@ done
 
 # Copmute angle of flexion, supinal and extension positions
 
-python $PATH_SCRIPT/copmute_neck_angle.py -i -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}/angle.csv -subjecct $SUBJECT_ID -ses $SES
+python $PATH_SCRIPT/compute_neck_angle.py -i -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}/angle.csv -subjecct $SUBJECT_ID -ses $SES
 
 # Verify presence of output files and write log file if error
 # ------------------------------------------------------------------------------
