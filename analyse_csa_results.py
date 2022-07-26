@@ -3,6 +3,7 @@
 # Functions to analyse CSA data with nerve rootlets, vertebral levels and PMJ
 # Author: Sandrine Bédard
 
+from re import L
 import warnings
 warnings.filterwarnings("ignore")
 import argparse
@@ -22,6 +23,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # default: logging.DEBUG, logging.INFO
 hdlr = logging.StreamHandler(sys.stdout)
 logging.root.addHandler(hdlr)
+
+plt.rcParams['axes.axisbelow'] = True
 
 
 def get_parser():
@@ -71,8 +74,8 @@ def compute_distance_mean(df):
     Returns:
 
     """
-    # Retreive subjects ID: (TODO: consider removing)
-    subjects = ["sub-002", "sub-003", "sub-004", "sub-005", "sub-006", "sub-007", "sub-008", "sub-009", "sub-010", "sub-011"]
+    # Retreive subjects ID:
+    subjects = np.unique(np.array([sub.split('_')[0] for sub in df.index]))
     metrics = ['mean', 'std', 'COV']
     levels = [2, 3, 4, 5, 6, 7]
     methods = ['Distance - PMJ (mm)', 'Distance - Disc (mm)']
@@ -99,10 +102,18 @@ def compute_distance_mean(df):
             df_disc = df2.loc[df['Disc'] == level]
             df3_pmj = df_pmj.loc[df_pmj.index.intersection(subs)]
             df_disc = df_disc.loc[df_disc.index.intersection(subs)]
-            stats_pmj[subject]['mean'].append(np.mean(df3_pmj[methods[0]]))
-            stats_pmj[subject]['std'].append(np.std(df3_pmj[methods[0]]))
-            stats_disc[subject]['mean'].append(np.mean(df_disc[methods[1]]))
-            stats_disc[subject]['std'].append(np.std(df_disc[methods[1]]))
+            if len(df3_pmj[methods[0]])>1:
+                stats_pmj[subject]['mean'].append(np.mean(df3_pmj[methods[0]]))
+                stats_pmj[subject]['std'].append(np.std(df3_pmj[methods[0]]))
+            else:
+                stats_pmj[subject]['mean'].append(np.NaN)
+                stats_pmj[subject]['std'].append(np.NaN)
+            if len(df_disc[methods[1]])>1:
+                stats_disc[subject]['mean'].append(np.mean(df_disc[methods[1]]))
+                stats_disc[subject]['std'].append(np.std(df_disc[methods[1]]))
+            else:
+                stats_disc[subject]['mean'].append(np.NaN)
+                stats_disc[subject]['std'].append(np.NaN)
 
         stats_pmj[subject]['COV'] = np.true_divide(stats_pmj[subject]['std'], np.abs(stats_pmj[subject]['mean'])).tolist()
         stats_disc[subject]['COV'] = np.true_divide(stats_disc[subject]['std'], np.abs(stats_disc[subject]['mean'])).tolist()
@@ -143,8 +154,8 @@ def compute_distance_mean(df):
     data['Levels'] = new_levels
     data['COV'] = [x * 100 for x in cov]
     data['Subject'] = np.tile(np.ravel(np.repeat(subjects, 6)), 2)
-    data.loc[0:35, 'Method'] = 'PMJ'
-    data.loc[36:71, 'Method'] = 'Disc'
+    data.loc[0:59, 'Method'] = 'PMJ'
+    data.loc[60:119, 'Method'] = 'Disc'
     # Create boxplot of COV(distances) perlevel across subject
     plt.figure()
     plt.grid()
@@ -153,10 +164,10 @@ def compute_distance_mean(df):
     plt.ylabel('COV (%)')
     plt.savefig('boxplot_cov.png')
     plt.close()
-    scatter_plot_distance(x1=data.loc[0:35, 'Levels'],
-                          y1=data.loc[0:35, 'COV'],
-                          x2=data.loc[36:71, "Levels"],
-                          y2=data.loc[36:71, 'COV'],
+    scatter_plot_distance(x1=data.loc[0:59, 'Levels'],
+                          y1=data.loc[0:59, 'COV'],
+                          x2=data.loc[60:119, "Levels"],
+                          y2=data.loc[60:119, 'COV'],
                           y_label='COV (%)',
                           title_1='a) COV PMJ-Nerve Roots perlevel',
                           title_2='b) COV Disc-Nerve Roots perlevel',
@@ -168,8 +179,8 @@ def compute_distance_mean(df):
     data_std['Levels'] = new_levels
     data_std['std'] = std
     data_std['Subject'] = np.tile(np.ravel(np.repeat(subjects, 6)), 2)
-    data_std.loc[0:59, 'Method'] = 'PMJ' # Why 30 and not 35??
-    data_std.loc[60:119, 'Method'] = 'Disc' # Why 30 and not 35??
+    data_std.loc[0:59, 'Method'] = 'PMJ'
+    data_std.loc[60:119, 'Method'] = 'Disc'
 
     # Compute Mean of std across subject perlevel for PMJ and disc distances
     std_perlevel_accross_subject_pmj = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
@@ -179,7 +190,7 @@ def compute_distance_mean(df):
     logger.info('Mean STD: {} ± {}'.format(std_perlevel_accross_subject_pmj['Mean(STD)'].mean(), std_perlevel_accross_subject_pmj['Mean(STD)'].std()))
 
     std_perlevel_accross_subject_disc = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
-    std_perlevel_accross_subject_disc['Mean(STD)'] = data_std.loc[60:119].groupby('Levels')['std'].mean() # Why 30 and not 35??
+    std_perlevel_accross_subject_disc['Mean(STD)'] = data_std.loc[60:119].groupby('Levels')['std'].mean()
     std_perlevel_accross_subject_disc['STD(STD)'] = data_std.loc[60:119].groupby('Levels')['std'].std()
     logger.info('DISC: {}'.format(std_perlevel_accross_subject_disc))
     logger.info('Mean STD: {} ± {}'.format(std_perlevel_accross_subject_disc['Mean(STD)'].mean(), std_perlevel_accross_subject_disc['Mean(STD)'].std()))
@@ -220,20 +231,26 @@ def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, f
     Returns:
 
     """
-    plt.grid()
-    fig, ax = plt.subplots(1, 2, sharey=True)
-    sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral") # Spectral
+    fig, ax = plt.subplots(1, 2, sharey=True, figsize=(8,5))
+    ax[0].grid(color='lightgrey')
+    sns.scatterplot(ax=ax[0], x=x1, y=y1, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
     ax[0].set_ylabel(y_label)
     ax[0].set_xlabel('Level')
     ax[0].set_title(title_1)
     ax[0].set_box_aspect(1)
-
-    sns.scatterplot(ax=ax[1], x=x2, y=y2, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
+    
+    ax[1].grid(color='lightgrey')
+    ax[1].legend(loc='center right') #bbox_to_anchor =(0, 1)
+    sns.scatterplot(ax=ax[1], x=x2, y=y2, hue=hue, alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
     ax[1].set_ylabel(y_label)
     ax[1].set_xlabel('Level')
     ax[1].set_title(title_2)
     ax[1].set_box_aspect(1)
-    plt.tight_layout()
+    handles, labels = ax[1].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='center right', title='Subject')
+    ax[1].get_legend().remove()
+
+    plt.tight_layout(rect=[0,0,0.86,1])
     if not filename:
         filename = "scatterplot.png"
     plt.savefig(filename)
@@ -257,22 +274,31 @@ def compute_stats_csa(csa, level_type):
     stats = stats.astype({"Mean": float, "STD": float, 'COV': float})
     stats['Subject'] = np.repeat(csa['Subject'].unique(), 6)
     levels = [2, 3, 4, 5, 6, 7]
-    stats['Level'] = np.tile(levels, 6)
+    stats['Level'] = np.tile(levels, 10)
     # Loop through subjects
     for subject in csa['Subject'].unique():
         if level_type == 'DistancePMJ':
             levels_pmj = np.unique(csa.loc[csa.index[csa['Subject'] == subject], level_type]).tolist()
             if len(levels_pmj) > 6:  # Only use 6 levels
-                levels_pmj = levels_pmj[:-1]
+                diff = len(levels_pmj) - len(levels)
+                levels_pmj = levels_pmj[:-diff]
         else:
             levels_pmj = levels
+            
         for level in levels_pmj:
             csa_level = csa.loc[csa[level_type] == level]
             csa_level.set_index(['Subject'], inplace=True)
             index = (stats[(stats['Level'] == levels[levels_pmj.index(level)]) & (stats['Subject'] == subject)].index.tolist())
-            stats.loc[index, 'Mean'] = np.mean(csa_level.loc[subject, 'MEAN(area)'])
-            stats.loc[index, 'STD'] = np.std(csa_level.loc[subject, 'MEAN(area)'])
-            stats.loc[index, 'COV'] = 100*np.divide(stats.loc[index, 'STD'], stats.loc[index, 'Mean'])
+            if csa_level.loc[subject, 'MEAN(area)'].size > 1:
+                stats.loc[index, 'Mean'] = np.mean(csa_level.loc[subject, 'MEAN(area)'])
+                stats.loc[index, 'STD'] = np.std(csa_level.loc[subject, 'MEAN(area)'])
+                stats.loc[index, 'COV'] = 100*np.divide(stats.loc[index, 'STD'], stats.loc[index, 'Mean'])
+            else:
+                stats.loc[index, 'Mean'] = np.NaN
+                stats.loc[index, 'STD'] = np.NaN
+                stats.loc[index, 'COV'] = np.NaN
+
+    
     # Compute Mean and STD across subject perlevel of STD(CSA)
     std_perlevel_accross_subject = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
     std_perlevel_accross_subject['Mean(STD)'] = stats.groupby('Level')['STD'].mean()
@@ -284,6 +310,9 @@ def compute_stats_csa(csa, level_type):
     cov_perlevel_accross_subject['STD(COV)'] = stats.groupby('Level')['COV'].std()
     logger.info('Mean CSA perlevel:')
     logger.info(stats.groupby('Level')['Mean'].mean())
+    logger.info('STD CSA perlevel:')
+    logger.info(stats.groupby('Level')['Mean'].std())
+
     logger.info('CSA, mean COV perlevel')
     logger.info(cov_perlevel_accross_subject)
     # Compute Mean and STD acrosss suject and level of COV(CSA)
@@ -307,9 +336,9 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     plt.figure()
     plt.grid()
     csa = (csa_vert.append(csa_spinal, ignore_index=True)).append(csa_pmj, ignore_index=True)
-    csa.loc[0:35, 'Method'] = 'Disc' # TODO change according to number of subject --> maybe automate
-    csa.loc[36:71, 'Method'] = 'Spinal Roots'
-    csa.loc[72:108, 'Method'] = 'PMJ'
+    csa.loc[0:59, 'Method'] = 'Disc' # TODO change according to number of subject --> maybe automate
+    csa.loc[60:119, 'Method'] = 'Spinal Roots'
+    csa.loc[120:179, 'Method'] = 'PMJ'
     plt.title('Coeficient of variation (COV) of CSA among 3 neck positions')
     sns.boxplot(x='Level', y='COV', data=csa, hue='Method', palette="Set3", showmeans=True)
     plt.ylabel('COV (%)')
@@ -319,7 +348,7 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     # Scatter Plot of COV of CSA permethods and perlevel
     fig, ax = plt.subplots(1, 3, sharey=True, figsize=(10, 30))
     y_label = 'COV (%)'
-    sns.scatterplot(ax=ax[0], x=csa.loc[0:35, 'Level'], y=csa.loc[0:35, 'COV'], hue=csa.loc[0:35, 'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
+    sns.scatterplot(ax=ax[0], x=csa.loc[0:59, 'Level'], y=csa.loc[0:59, 'COV'], hue=csa.loc[0:59, 'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
     ax[0].set_ylabel(y_label)
     ax[0].set_xlabel('Level')
     ax[0].set_title('a) COV of CSA with Disc')
@@ -330,7 +359,7 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     fig.legend(handles, labels, loc='center right', title='Subject')
     ax[0].get_legend().remove()
 
-    sns.scatterplot(ax=ax[1], x=np.array(csa.loc[36:71, 'Level']), y=csa.loc[36:71, 'COV'], hue=csa.loc[36:71, 'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
+    sns.scatterplot(ax=ax[1], x=np.array(csa.loc[60:119, 'Level']), y=csa.loc[60:119, 'COV'], hue=csa.loc[60:119, 'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
     ax[1].set_ylabel(y_label)
     ax[1].set_xlabel('Level')
     ax[1].set_title('b) COV of CSA with Spinal Roots')
@@ -338,7 +367,7 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     ax[1].grid(color='lightgray')
     ax[1].set_axisbelow(True)
 
-    sns.scatterplot(ax=ax[2], x=csa.loc[72:108, 'Level'], y=csa.loc[72:108, 'COV'], hue=csa.loc[72:108, 'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
+    sns.scatterplot(ax=ax[2], x=csa.loc[120:179, 'Level'], y=csa.loc[120:179, 'COV'], hue=csa.loc[120:179, 'Subject'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
     ax[2].set_ylabel(y_label)
     ax[2].set_xlabel('Level')
     ax[2].set_title('b) COV of CSA with PMJ')
@@ -421,8 +450,11 @@ def main():
         data = get_csa(files)
         csa_pmj = csa_pmj.append(data, ignore_index=True)
     # Compute statistics about CSA.
+    logger.info('Vertebral-based CSA')
     stats_csa_vert = compute_stats_csa(csa_vert, 'Levels')
+    logger.info('Spinal-based CSA')
     stats_csa_spinal = compute_stats_csa(csa_spinal, 'Levels')
+    logger.info('PMJ-based CSA')
     stats_csa_pmj = compute_stats_csa(csa_pmj, 'DistancePMJ')
     analyse_csa(stats_csa_vert, stats_csa_spinal, stats_csa_pmj)
 
