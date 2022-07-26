@@ -65,6 +65,25 @@ def get_csa(csa_filename):
     return csa
 
 
+def get_RL_angle(csa_filename):
+    """
+    From .csv output file of process_data.sh (sct_process_segmentation),
+    returns a panda dataFrame with RL angle values sorted by subject eid.
+    Args:
+        csa_filename (str): filename of the .csv file that contains de CSA values
+    Returns:
+        csa (pd.Series): column of RL angle values
+
+    """
+    sc_data = csv2dataFrame(csa_filename)
+    angle = pd.DataFrame(sc_data[['Filename', 'MEAN(angle_RL)', 'Slice (I->S)']]).rename(columns={'Filename': 'Subject'})
+    angle.replace('None', np.NaN, inplace=True)
+    angle = angle.astype({"MEAN(angle_RL)": float})
+    angle['ses'] = (angle['Subject'].str.split('/')).str[-3]
+    angle.loc[:, 'Subject'] = (angle['Subject'].str.split('/')).str[-4]
+    return angle
+ 
+
 def compute_distance_mean(df):
     """"
     Analyse distance data. Compute the std of distances for each level, mean(std), generate a scatterplot.
@@ -400,6 +419,23 @@ def get_csa_files(path_results):
     return path_csa_vert, path_csa_spinal, path_csa_pmj
 
 
+def compute_neck_angle(angles):
+    #angles.set_index(['Subject'], inplace=True)
+    angles.sort_index(axis=1, inplace=True)
+    ses_Up = angles.loc[angles['ses']=='ses-headUp']
+    ses_Normal = angles.loc[angles['ses']=='ses-headNormal']
+    ses_Down = angles.loc[angles['ses']=='ses-headDown']
+
+
+    angles_Up = ses_Up.loc[ses_Up['Levels']==5.0]['MEAN(angle_RL)'].to_numpy() - ses_Up.loc[ses_Up['Levels']==2.0]['MEAN(angle_RL)'].to_numpy() 
+    print('angles Up', angles_Up)
+    angle_Normal = ses_Normal.loc[ses_Normal['Levels']==5.0]['MEAN(angle_RL)'].to_numpy() - ses_Normal.loc[ses_Normal['Levels']==2.0]['MEAN(angle_RL)'].to_numpy()
+    angle_Down = ses_Down.loc[ses_Down['Levels']==5.0]['MEAN(angle_RL)'].to_numpy() - ses_Down.loc[ses_Down['Levels']==2.0]['MEAN(angle_RL)'].to_numpy()
+
+    print('angles Normal', angle_Normal)
+    print('angles Down', angle_Down)
+
+
 def main():
     parser = get_parser()
     args = parser.parse_args()
@@ -422,18 +458,24 @@ def main():
     csa_vert = pd.DataFrame()
     csa_spinal = pd.DataFrame()
     csa_pmj = pd.DataFrame()
+    angles_df = pd.DataFrame()
 
     # Loop through files to get all CSA values and put them in a dataframe
     for files in files_vert:
         data = get_csa(files)
+        angles = get_RL_angle(files)
         basename = os.path.basename(files)
-        # Retrve .csv files of labels correspondance.
+        # Retrieve .csv files of labels correspondance.
         path_labels_corr = glob.glob(args.path_results + basename[0:18]+"*_vert.nii.gz_labels.csv", recursive=True)
         labels_corr = csv2dataFrame(path_labels_corr[0])
         # Get labels correspondance for vert
         for label in data['Slice (I->S)']:
+            angles.loc[angles['Slice (I->S)'] == label, 'Levels'] = labels_corr.loc[labels_corr['Slices'] == label, 'Level']
             data.loc[data['Slice (I->S)'] == label, 'Levels'] = labels_corr.loc[labels_corr['Slices'] == label, 'Level']
         csa_vert = csa_vert.append(data, ignore_index=True)
+        angles_df = angles_df.append(angles, ignore_index=True)
+    # Compute RL angle of spinal cord between disc C1-C2 and C5-C6 
+    compute_neck_angle(angles_df)
 
     for files in files_spinal:
         data = get_csa(files)
@@ -449,6 +491,8 @@ def main():
     for files in files_pmj:
         data = get_csa(files)
         csa_pmj = csa_pmj.append(data, ignore_index=True)
+    
+    
     # Compute statistics about CSA.
     logger.info('Vertebral-based CSA')
     stats_csa_vert = compute_stats_csa(csa_vert, 'Levels')
