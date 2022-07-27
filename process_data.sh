@@ -173,9 +173,6 @@ for dist_nerv in "${dist_nerves_pmj[@]}";do
   sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance $dist_nerv -pmj-extent 1.8 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
 done
 
-# Copmute angle of flexion, supinal and extension positions
-
-python $PATH_SCRIPT/compute_neck_angle.py -i -centerline ${file_t2_seg}_centerline_extrapolated.csv -disclabel ${file_t2_seg}_labeled_discs_vert.nii.gz -o ${PATH_RESULTS}/angle.csv -subjecct $SUBJECT_ID -ses $SES
 
 # Verify presence of output files and write log file if error
 # ------------------------------------------------------------------------------
