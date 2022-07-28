@@ -45,7 +45,7 @@ def get_csa(csa_filename):
 
     """
     sc_data = csv2dataFrame(csa_filename)
-    csa = pd.DataFrame(sc_data[['Filename', 'Slice (I->S)', 'VertLevel', 'MEAN(area)']]).rename(columns={'Filename': 'Subject'})
+    csa = pd.DataFrame(sc_data[['Filename', 'Slice (I->S)', 'VertLevel','DistancePMJ', 'MEAN(area)']]).rename(columns={'Filename': 'Subject'})
     # Add a columns with subjects eid from Filename column
     csa.loc[:, 'Subject'] = csa['Subject'].str.slice(-43, -32)
     
@@ -67,26 +67,26 @@ def main():
     args = parser.parse_args()
     df = get_csa(args.filename)
     #df[df.rebounds != 'None']
-    df = df.replace('None', pd.np.nan)
+    df = df.replace('None', np.NaN)
     df = df.dropna(0, how='any').reset_index(drop=True)
-    df = df.iloc[::-1]
+    df = df.iloc[::-1].reset_index()
     plt.figure()
     fig, ax = plt.subplots(figsize=(5,6))
     plt.tick_params(axis='y', which='both', labelleft=False, labelright=True)
-     
     # Get slices where array changes value
     vert = df['VertLevel'].to_numpy()
     ind_vert = np.where(vert[:-1] != vert[1:])[0]
     for x in ind_vert:
-        plt.axhline(x, color='k', linestyle='--')
-        ax.text(x/len(ind_vert), 0.05, vert[x], transform=ax.transAxes)
+        new_x = len(df['DistancePMJ'].to_numpy()[6:-6]) - x + 17
+        plt.axhline(df.loc[x,'DistancePMJ'], color='darkblue', linestyle='--')
+        ax.text(0.05 , new_x/np.argmax(df['DistancePMJ'].to_numpy()[6:-6]), 'C'+str(vert[x]), transform=ax.transAxes, horizontalalignment='right', verticalalignment='center',color='darkblue')
     
-    plt.plot(smooth(pd.to_numeric(df['MEAN(area)']).to_numpy(), 6)[1:-1],df['Slice (I->S)'].to_numpy()[1:-1], 'r', aa=True)
-    plt.grid()
-    plt.title('Aire transversale de la moelle épinière', fontsize=16)
-    plt.ylim(max(df['Slice (I->S)'].to_numpy()[6:-6]), min(df['Slice (I->S)'].to_numpy()[6:-6]))
-    plt.xlabel('ATM ($mm^2$)', fontsize=14)
-    plt.ylabel('Coupe (S->I)', fontsize=14)
+    plt.plot(smooth(pd.to_numeric(df['MEAN(area)']).to_numpy(), 12)[1:-1],df['DistancePMJ'].to_numpy()[1:-1], 'r', aa=True)
+    plt.grid(color='lightgrey')
+    plt.title('Spinal Cord Cross-sectional area', fontsize=16)
+    plt.ylim(max(df['DistancePMJ'].to_numpy()[6:-6]), min(df['DistancePMJ'].to_numpy()[6:-6]))
+    plt.xlabel('CSA ($mm^2$)', fontsize=14)
+    plt.ylabel('Distance from PMJ (S->I)', fontsize=14)
     #ax2.set_xlabel('VertLevel')
     plt.savefig(args.o)
 
