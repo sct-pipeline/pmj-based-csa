@@ -15,6 +15,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import logging
+from statsmodels.stats.anova import AnovaRM
 
 FNAME_LOG = 'log.txt'
 
@@ -82,7 +83,11 @@ def get_RL_angle(csa_filename):
     angle['ses'] = (angle['Subject'].str.split('/')).str[-3]
     angle.loc[:, 'Subject'] = (angle['Subject'].str.split('/')).str[-4]
     return angle
- 
+
+
+def compute_anova(df,level, depvar='std', subject='Subject', within=['Method']):
+    print(level, AnovaRM(data=df, depvar=depvar, subject=subject, within=within).fit())
+
 
 def compute_distance_mean(df):
     """"
@@ -143,8 +148,8 @@ def compute_distance_mean(df):
 
     mean_std_perlevel_pmj = np.zeros(6)
     mean_std_perlevel_disc = np.zeros(6)
-
     statistics_pmj = list(stats_pmj.values())
+    
     statistics_disc = list(stats_disc.values())
 
     i = 0
@@ -200,6 +205,18 @@ def compute_distance_mean(df):
     data_std['Subject'] = np.tile(np.ravel(np.repeat(subjects, 6)), 2)
     data_std.loc[0:59, 'Method'] = 'PMJ'
     data_std.loc[60:119, 'Method'] = 'Disc'
+    # Compute anova
+    for level in levels:
+        data = data_std.loc[data_std['Levels']==level]
+        nan_idx = (data.loc[pd.isna(data['std']), :].index).to_numpy()
+        sub_nan = data.loc[nan_idx, 'Subject']
+        if not sub_nan.empty:
+            data.dropna(inplace=True, axis=0)
+            data.drop(data.loc[data['Subject']==sub_nan.to_numpy()[0]].index, inplace=True)
+        compute_anova(data, level)
+    # Compute ANOVA for all levels combined
+    df_for_anova = data_std.drop(data_std.loc[data_std['Subject']=='sub-008'].index)
+    compute_anova(df_for_anova, level='all', within=['Method', 'Levels'])
 
     # Compute Mean of std across subject perlevel for PMJ and disc distances
     std_perlevel_accross_subject_pmj = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
@@ -364,6 +381,14 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     plt.savefig('boxplot_csa_COV.png')
     plt.close()
 
+    for level in range(2, 8):
+        df = csa.loc[csa['Level']==level]
+        if level in [6,7]:
+            df = df.drop(df.loc[df['Subject']=='sub-008'].index)
+        compute_anova(df,level, depvar='Mean', subject='Subject', within=['Method'])
+    df_for_anova = csa.drop(csa.loc[csa['Subject']=='sub-008'].index)
+    compute_anova(df_for_anova,level='all', depvar='Mean', subject='Subject', within=['Method', 'Level'])
+    
     # Scatter Plot of COV of CSA permethods and perlevel
     fig, ax = plt.subplots(1, 3, sharey=True, figsize=(10, 30))
     y_label = 'COV (%)'
@@ -425,15 +450,23 @@ def compute_neck_angle(angles):
     ses_Up = angles.loc[angles['ses']=='ses-headUp']
     ses_Normal = angles.loc[angles['ses']=='ses-headNormal']
     ses_Down = angles.loc[angles['ses']=='ses-headDown']
-
-
+    # Compute angle between C2 and C5
     angles_Up = ses_Up.loc[ses_Up['Levels']==5.0]['MEAN(angle_RL)'].to_numpy() - ses_Up.loc[ses_Up['Levels']==2.0]['MEAN(angle_RL)'].to_numpy() 
-    print('angles Up', angles_Up)
     angle_Normal = ses_Normal.loc[ses_Normal['Levels']==5.0]['MEAN(angle_RL)'].to_numpy() - ses_Normal.loc[ses_Normal['Levels']==2.0]['MEAN(angle_RL)'].to_numpy()
     angle_Down = ses_Down.loc[ses_Down['Levels']==5.0]['MEAN(angle_RL)'].to_numpy() - ses_Down.loc[ses_Down['Levels']==2.0]['MEAN(angle_RL)'].to_numpy()
-
-    print('angles Normal', angle_Normal)
-    print('angles Down', angle_Down)
+    
+    angles = pd.DataFrame()
+    angles['ses'] = np.append(np.append(np.tile('Up',10), np.tile('Normal',10)), (np.tile('Down', 10)))
+    
+    angles['subject'] = np.tile(['sub-002', 'sub-003', 'sub-004', 'sub-005', 'sub-006', 'sub-007','sub-008', 'sub-009', 'sub-010', 'sub-011'], 3)
+    angles['angle'] = np.append(np.append(angles_Up, angle_Normal),angle_Down)
+    plt.figure()
+    sns.scatterplot(x=angles['subject'], y=angles['angle'], hue=angles['ses'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
+    plt.savefig('angles.png')
+    plt.close()
+    logger.info('angles Up: \n {}'.format(angles_Up))
+    logger.info('angles Normal:\n  {}'.format(angle_Normal))
+    logger.info('angles Down\n  {}'.format(angle_Down))
 
 
 def main():
