@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 # Functions to plot CSA perslice and vertebral levels
-# Need sct_process_segmentation -vert 1:10 -vertfile -perslice 1
+# Need sct_process_segmentation -vert 1:10 -vertfile -perslice 1 -pmj
 # Author: Sandrine Bédard
 
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ import numpy as np
 
 def get_parser():
     parser = argparse.ArgumentParser(
-        description="Generate graph of CSA perslice to detect cervical enlargement")
+        description="Generate graph of CSA perslice ")
     parser.add_argument('-filename', required=True, type=str,
                         help="Input .csv file with CSA computed perslice.")
     parser.add_argument('-o', required=False, type=str,
@@ -77,14 +77,17 @@ def main():
     vert = df['VertLevel'].to_numpy()
     ind_vert = np.where(vert[:-1] != vert[1:])[0]
     for x in ind_vert:
-        new_x = len(df['DistancePMJ'].to_numpy()[6:-6]) - x + 17
+        new_x = (185-40) - x
         plt.axhline(df.loc[x,'DistancePMJ'], color='darkblue', linestyle='--')
-        ax.text(0.05 , new_x/np.argmax(df['DistancePMJ'].to_numpy()[6:-6]), 'C'+str(vert[x]), transform=ax.transAxes, horizontalalignment='right', verticalalignment='center',color='darkblue')
-    
-    plt.plot(smooth(pd.to_numeric(df['MEAN(area)']).to_numpy(), 12)[1:-1],df['DistancePMJ'].to_numpy()[1:-1], 'r', aa=True)
+        #ax.text(0.05 , new_x/(230), 'C'+str(vert[x]), transform=ax.transAxes, horizontalalignment='right', verticalalignment='center',color='darkblue')
+        ax.text(33 , df.loc[x,'DistancePMJ']-2, 'C'+str(vert[x]), horizontalalignment='right', verticalalignment='center',color='darkblue')
+    plt.plot(smooth(pd.to_numeric(df['MEAN(area)']).to_numpy(), 5)[6:-6],df['DistancePMJ'].to_numpy()[6:-6], 'r', aa=True)
     plt.grid(color='lightgrey')
     plt.title('Spinal Cord Cross-sectional area', fontsize=16)
-    plt.ylim(max(df['DistancePMJ'].to_numpy()[6:-6]), min(df['DistancePMJ'].to_numpy()[6:-6]))
+    #plt.ylim(max(df['DistancePMJ'].to_numpy()[6:-6]), min(df['DistancePMJ'].to_numpy()[6:-6]))
+    plt.ylim(190, 35)
+
+    plt.xlim(30,90)
     plt.xlabel('CSA ($mm^2$)', fontsize=14)
     plt.ylabel('Distance from PMJ (S->I)', fontsize=14)
     #ax2.set_xlabel('VertLevel')
