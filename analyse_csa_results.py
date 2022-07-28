@@ -18,7 +18,8 @@ import logging
 from statsmodels.stats.anova import AnovaRM
 
 FNAME_LOG = 'log.txt'
-
+#MY_PAL = {"PMJ": "#C1BED6", "Disc": "#96CAC1", "Spinal Roots":"#F6F6BC"}
+MY_PAL = {"PMJ": "cornflowerblue", "Disc": "lightyellow", "Spinal Roots":"gold"}
 # Initialize logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # default: logging.DEBUG, logging.INFO
@@ -235,7 +236,7 @@ def compute_distance_mean(df):
     plt.figure()
     plt.grid()
     plt.title('Standard deviation (std) of distance among 3 neck positions')
-    sns.boxplot(x='Levels', y='std', data=data_std, hue='Method', palette="Set3", showmeans=True)
+    sns.boxplot(x='Levels', y='std', data=data_std, hue='Method', palette='Set3', showmeans=True)
     plt.ylabel('std (mm)')
     plt.savefig('boxplot_std.png')
     plt.close()
@@ -371,12 +372,12 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     """
     plt.figure()
     plt.grid()
-    csa = (csa_vert.append(csa_spinal, ignore_index=True)).append(csa_pmj, ignore_index=True)
-    csa.loc[0:59, 'Method'] = 'Disc' # TODO change according to number of subject --> maybe automate
-    csa.loc[60:119, 'Method'] = 'Spinal Roots'
-    csa.loc[120:179, 'Method'] = 'PMJ'
+    csa = (csa_pmj.append(csa_vert, ignore_index=True)).append(csa_spinal, ignore_index=True)
+    csa.loc[0:59, 'Method'] = 'PMJ' # TODO change according to number of subject --> maybe automate
+    csa.loc[60:119, 'Method'] = 'Disc'
+    csa.loc[120:179, 'Method'] = 'Spinal Roots'
     plt.title('Coeficient of variation (COV) of CSA among 3 neck positions')
-    sns.boxplot(x='Level', y='COV', data=csa, hue='Method', palette="Set3", showmeans=True)
+    sns.boxplot(x='Level', y='COV', data=csa, hue='Method', palette='Set3', showmeans=True)
     plt.ylabel('COV (%)')
     plt.savefig('boxplot_csa_COV.png')
     plt.close()
