@@ -86,8 +86,8 @@ def get_RL_angle(csa_filename):
     return angle
 
 
-def compute_anova(df,level, depvar='std', subject='Subject', within=['Method']):
-    print(level, AnovaRM(data=df, depvar=depvar, subject=subject, within=within).fit())
+def compute_anova(df,level, depvar='std', subject='Subject', within=['Method'], aggregate_func=None):
+    print(level, AnovaRM(data=df, depvar=depvar, subject=subject, within=within, aggregate_func=aggregate_func).fit())
 
 
 def compute_distance_mean(df):
@@ -216,8 +216,7 @@ def compute_distance_mean(df):
             data.drop(data.loc[data['Subject']==sub_nan.to_numpy()[0]].index, inplace=True)
         compute_anova(data, level)
     # Compute ANOVA for all levels combined
-    df_for_anova = data_std.drop(data_std.loc[data_std['Subject']=='sub-008'].index)
-    compute_anova(df_for_anova, level='all', within=['Method', 'Levels'])
+    compute_anova(data_std, level='all', within=['Method'], aggregate_func='mean')
 
     # Compute Mean of std across subject perlevel for PMJ and disc distances
     std_perlevel_accross_subject_pmj = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
@@ -387,8 +386,7 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
         if level in [6,7]:
             df = df.drop(df.loc[df['Subject']=='sub-008'].index)
         compute_anova(df,level, depvar='Mean', subject='Subject', within=['Method'])
-    df_for_anova = csa.drop(csa.loc[csa['Subject']=='sub-008'].index)
-    compute_anova(df_for_anova,level='all', depvar='Mean', subject='Subject', within=['Method', 'Level'])
+    compute_anova(csa, level='all', depvar='Mean', subject='Subject', within=['Method'], aggregate_func='mean')
     
     # Scatter Plot of COV of CSA permethods and perlevel
     fig, ax = plt.subplots(1, 3, sharey=True, figsize=(10, 30))
