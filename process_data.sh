@@ -166,6 +166,12 @@ for slices in "${slices_vert[@]}";do
   sct_process_segmentation -i ${file_t2_seg}.nii.gz -z $slices -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_vert.csv -append 1
 done
 
+# Compute CSA perslice for graph
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -perslice 1 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_perslice.csv -vertfile ${file_t2_seg}_labeled_vert.nii.gz -vert 1:10
+# Generate graph of CSA as a function of PMJ distance
+mkdir -p ${PATH_RESULTS}/graph_csa/
+python $PATH_SCRIPT/generate_graph_csa_pmj.py -filename ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_perslice.csv -o ${PATH_RESULTS}/graph_csa/${SUBJECT_ID}_${SES}.png
+
 # Get average distance of nerve labels
 dist_nerves_pmj=($(python $PATH_SCRIPT/get_mean_nerve_dist.py -file-distance ${PATH_SCRIPT}/disc_pmj_distance_to_use.csv -subject ${SUBJECT_ID}))
 # Compute average cord CSA at distance from each nerve from PMJ with a 3 slice extent (or 1.8 mm)
@@ -173,11 +179,6 @@ for dist_nerv in "${dist_nerves_pmj[@]}";do
   sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -pmj-distance $dist_nerv -pmj-extent 1.8 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_csa-SC_pmj.csv -append 1 -qc ${PATH_QC} -qc-subject ${SUBJECT} -qc-image ${file_t2}.nii.gz -v 2
 done
 
-# Compute CSA perslice for graph
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -perslice 1 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_perslice.csv -vertfile ${file_t2_seg}_labeled_vert.nii.gz -vert 1:10
-# Generate graph of CSA as a function of PMJ distance
-mkdir -p ${PATH_RESULTS}/graph_csa/
-python $PATH_SCRIPT/generate_graph_csa_pmj.py -filename ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_perslice.csv -o ${PATH_RESULTS}/graph_csa/${SUBJECT_ID}_${SES}.png
 
 
 # Verify presence of output files and write log file if error
