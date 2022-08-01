@@ -174,7 +174,7 @@ for dist_nerv in "${dist_nerves_pmj[@]}";do
 done
 
 # Compute CSA perslice for graph
-sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -perslice 1 -o -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_perslice.csv -vertfile ${file_t2_seg}_labeled_vert.nii.gz -vert 1:10
+sct_process_segmentation -i ${file_t2_seg}.nii.gz -pmj ${file_t2}_pmj.nii.gz -perslice 1 -o ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_perslice.csv -vertfile ${file_t2_seg}_labeled_vert.nii.gz -vert 1:10
 # Generate graph of CSA as a function of PMJ distance
 mkdir ${PATH_RESULTS}/graph_csa/
 python $PATH_SCRIPT/generate_graph_csa_pmj.py -filename ${PATH_RESULTS}/${SUBJECT_ID}_${SES}_perslice.csv -o ${PATH_RESULTS}/graph_csa/${SUBJECT_ID}_${SES}.png
