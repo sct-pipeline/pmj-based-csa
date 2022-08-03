@@ -87,7 +87,8 @@ def get_RL_angle(csa_filename):
 
 
 def compute_anova(df,level, depvar='std', subject='Subject', within=['Method'], aggregate_func=None):
-    print(level, AnovaRM(data=df, depvar=depvar, subject=subject, within=within, aggregate_func=aggregate_func).fit())
+    logger.info(level)
+    logger.info('ANOVA: {}'.format(AnovaRM(data=df, depvar=depvar, subject=subject, within=within, aggregate_func=aggregate_func).fit()))
 
 
 def compute_distance_mean(df):
@@ -380,14 +381,21 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     plt.ylabel('COV (%)')
     plt.savefig('boxplot_csa_COV.png')
     plt.close()
-
+    # Compute ANOVA on mean CSA perlevel and all levels
     for level in range(2, 8):
         df = csa.loc[csa['Level']==level]
         if level in [6,7]:
             df = df.drop(df.loc[df['Subject']=='sub-008'].index)
+        logger.info('CSA ANOVA:')
         compute_anova(df,level, depvar='Mean', subject='Subject', within=['Method'])
+        logger.info('COV ANOVA:')
+        compute_anova(df,level, depvar='COV', subject='Subject', within=['Method'])
+    logger.info('CSA ANOVA:')
     compute_anova(csa, level='all', depvar='Mean', subject='Subject', within=['Method'], aggregate_func='mean')
-    
+    # Compute ANOVA on mean COV perlevel and all levels
+    logger.info('COV ANOVA:')
+    compute_anova(csa, level='all', depvar='COV', subject='Subject', within=['Method'], aggregate_func='mean')
+
     # Scatter Plot of COV of CSA permethods and perlevel
     fig, ax = plt.subplots(1, 3, sharey=True, figsize=(10, 30))
     y_label = 'COV (%)'
@@ -532,6 +540,7 @@ def main():
     stats_csa_spinal = compute_stats_csa(csa_spinal, 'Levels')
     logger.info('PMJ-based CSA')
     stats_csa_pmj = compute_stats_csa(csa_pmj, 'DistancePMJ')
+
     analyse_csa(stats_csa_vert, stats_csa_spinal, stats_csa_pmj)
 
 
