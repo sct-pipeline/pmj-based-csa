@@ -108,7 +108,6 @@ def compute_distance_mean(df):
     stats_pmj = {}
     stats_disc = {}
     df2 = df[["Nerve", "Disc", "Distance - PMJ (mm)", "Distance - Disc (mm)"]]
-
     # Initialize empty dict
     for subject in subjects:
         stats_pmj[subject] = {}
@@ -122,7 +121,10 @@ def compute_distance_mean(df):
         sub2 = subject + "_ses-headDown"
         sub3 = subject + "_ses-headUp"
         subs = [sub1, sub2, sub3]
-        df.loc[subs, "Subject_id"] = subject
+        df2.loc[subs, "Subject_id"] = subject
+        df2.loc[sub1, "ses"] = 'Normal'
+        df2.loc[sub2, "ses"] = 'Down'
+        df2.loc[sub3, "ses"] = 'Up'
         for level in levels:
             df_pmj = df2.loc[df['Nerve'] == level]
             df_disc = df2.loc[df['Disc'] == level]
@@ -217,7 +219,13 @@ def compute_distance_mean(df):
             data.drop(data.loc[data['Subject']==sub_nan.to_numpy()[0]].index, inplace=True)
         compute_anova(data, level)
     # Compute ANOVA for all levels combined
-    compute_anova(data_std, level='all', within=['Method'], aggregate_func='mean')
+    data = data_std
+    nan_idx = (data.loc[pd.isna(data['std']), :].index).to_numpy()
+    sub_nan = data.loc[nan_idx, 'Subject']
+    if not sub_nan.empty:
+        data.dropna(inplace=True, axis=0)
+        data.drop(data.loc[data['Subject']==sub_nan.to_numpy()[0]].index, inplace=True)
+    compute_anova(data_std, level='all', within=['Method', 'Levels'])
 
     # Compute Mean of std across subject perlevel for PMJ and disc distances
     std_perlevel_accross_subject_pmj = pd.DataFrame(columns=['Mean(STD)', 'STD(STD)'])
@@ -249,7 +257,7 @@ def compute_distance_mean(df):
                           title_1='a) STD PMJ-Nerve Roots perlevel',
                           title_2='b) STD Disc-Nerve Roots perlevel',
                           filename='scatterplot_std.png')
-
+    return df2
 
 def scatter_plot_distance(x1, y1, x2, y2, y_label, title_1, title_2, hue=None, filename=None):
     """
@@ -390,11 +398,17 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
         compute_anova(df,level, depvar='Mean', subject='Subject', within=['Method'])
         logger.info('COV ANOVA:')
         compute_anova(df,level, depvar='COV', subject='Subject', within=['Method'])
+    data = csa
+    nan_idx = (data.loc[pd.isna(data['Mean']), :].index).to_numpy()
+    sub_nan = data.loc[nan_idx, 'Subject']
+    if not sub_nan.empty:
+        data.dropna(inplace=True, axis=0)
+        data.drop(data.loc[data['Subject']==sub_nan.to_numpy()[0]].index, inplace=True)
     logger.info('CSA ANOVA:')
-    compute_anova(csa, level='all', depvar='Mean', subject='Subject', within=['Method'], aggregate_func='mean')
+    compute_anova(data, level='all', depvar='Mean', subject='Subject', within=['Method', 'Level'])
     # Compute ANOVA on mean COV perlevel and all levels
     logger.info('COV ANOVA:')
-    compute_anova(csa, level='all', depvar='COV', subject='Subject', within=['Method'], aggregate_func='mean')
+    compute_anova(data, level='all', depvar='COV', subject='Subject', within=['Method','Level'])
 
     # Scatter Plot of COV of CSA permethods and perlevel
     fig, ax = plt.subplots(1, 3, sharey=True, figsize=(10, 30))
@@ -475,6 +489,47 @@ def compute_neck_angle(angles):
     logger.info('angles Normal:\n  {}'.format(angle_Normal))
     logger.info('angles Down\n  {}'.format(angle_Down))
 
+    # Compute max angle variation between up and down
+    angles_diff = angles_Up - angle_Down
+    return angles_diff
+
+
+def df_to_csv(df, filename):
+    """
+    Save a Dataframe as a .csv file.
+    Args:
+        df (panda.DataFrame)
+        filename (str): Name of the output .csv file.
+    """
+    df.to_csv(filename)
+    logger.info('Created: ' + filename)
+
+
+def compute_corr_angles(angles, distance):
+    subjects = np.unique(np.array([sub.split('_')[0] for sub in distance.index]))
+    df_pmj = pd.DataFrame(columns=['subject', 'angles', 'distance_pmj', 'level'])
+    df_disc = pd.DataFrame(columns=['subject', 'angles', 'distance_disc', 'level'])
+    df_pmj['subject'] = np.tile(subjects,6)
+    df_pmj['level'] = np.tile(range(2,8),10)
+    df_pmj['angles'] = np.tile(angles,6)
+    #distance.dropna(inplace=True)
+    print(distance)
+    print(df_pmj)
+    for level in range(2,8):
+        for sub in subjects:
+            dist_pmj_up = distance.loc[(distance['ses']=='Up')& (distance['Nerve']==level) & (distance['Subject_id']==sub),'Distance - PMJ (mm)']
+            dist_pmj_up.dropna(inplace=True)
+            dist_pmj_down = distance.loc[(distance['ses']=='Down')& (distance['Nerve']==level) & (distance['Subject_id']==sub),'Distance - PMJ (mm)']
+            dist_pmj_down.dropna(inplace=True)
+            print('diff:', (np.array(dist_pmj_up) - np.array(dist_pmj_down)))
+            df_pmj.loc[(df_pmj['level']==level) & (df_pmj['subject']==sub),'distance_pmj'] = np.array(dist_pmj_up)[0] - np.array(dist_pmj_down)[0]
+            #df_disc['distance_disc'] = distance.loc[(distance['ses']=='Up'),'Distance - Disc (mm)'] - distance.loc[(distance['ses']=='Down'),'Distance - Disc (mm)']
+    corr_table_pmj = df_pmj.corr(method='pearson')
+    print(corr_table_pmj)
+    # Save a.csv file of the correlation matrix in the results folder
+    corr_filename = 'corr_angle_distance'
+    df_to_csv(corr_table_pmj, corr_filename + '.csv')
+
 
 def main():
     parser = get_parser()
@@ -489,7 +544,7 @@ def main():
     # Read distance from nerve rootlets
     path_distance = os.path.join(args.path_results, "disc_pmj_distance.csv")
     df_distance = csv2dataFrame(path_distance).set_index('Subject')
-    compute_distance_mean(df_distance)
+    distances = compute_distance_mean(df_distance)
 
     # Get.csv filenames of CSA.
     files_vert, files_spinal, files_pmj = get_csa_files(args.path_results)
@@ -515,7 +570,9 @@ def main():
         csa_vert = csa_vert.append(data, ignore_index=True)
         angles_df = angles_df.append(angles, ignore_index=True)
     # Compute RL angle of spinal cord between disc C1-C2 and C5-C6 
-    compute_neck_angle(angles_df)
+    angles_diff = compute_neck_angle(angles_df)
+    
+    compute_corr_angles(angles_diff, distances)
 
     for files in files_spinal:
         data = get_csa(files)
