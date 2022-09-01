@@ -63,6 +63,7 @@ def get_csa(csa_filename):
     csa = pd.DataFrame(sc_data[['Filename', 'MEAN(area)', 'Slice (I->S)', 'DistancePMJ']]).rename(columns={'Filename': 'Subject'})
     csa.replace('None', np.NaN, inplace=True)
     csa = csa.astype({"MEAN(area)": float})
+    csa.loc[:,'ses'] =  (csa['Subject'].str.split('/')).str[-3]
     csa.loc[:, 'Subject'] = (csa['Subject'].str.split('/')).str[-4]
     return csa
 
@@ -367,13 +368,79 @@ def compute_stats_csa(csa, level_type):
     return stats
 
 
+def compute_anova_csa(csa_vert, csa_pmj, csa_spinal):
+    """
+    Compute ANOVA fro repeated mesures on CSA results (MEAN(area)) for the following categories: 
+        - Methods{PMJ, vert, spinal} 
+        - Levels{2,3,4,5} --> Unbalanced data for levels 6 and 7
+        - ses{Up, Normal, Down}
+    Args:
+        csa_vert (pandas.DataFrame): Dataframe of vertebral-based CSA.
+        csa_spinal (pandas.DataFrame): Dataframe of spinal-based CSA.
+        csa_pmj (pandas.DataFrame): Dataframe of pmj-based CSA.
+    Returns:
+
+    """
+    csa_pmj['Levels'] = np.NaN
+    subjects = np.unique(np.array([sub.split('_')[0] for sub in csa_pmj['Subject']]))
+    for sub in subjects:
+        for ses in ['ses-headUp', 'ses-headDown', 'ses-headNormal']:
+            length  = csa_pmj.loc[(csa_pmj['ses']==ses)&(csa_pmj['Subject']==sub), 'Levels'].size
+            csa_pmj.loc[(csa_pmj['ses']==ses)&(csa_pmj['Subject']==sub), 'Levels'] = np.arange(2,length+2)
+    csa_joinded = (csa_pmj.append(csa_vert, ignore_index=True)).append(csa_spinal, ignore_index=True)
+    len_pmj = csa_pmj['Subject'].size
+    len_vert = csa_vert['Subject'].size
+    len_spinal = csa_spinal['Subject'].size
+    csa_joinded.loc[0:len_pmj -1, 'Method'] = 'PMJ'
+    csa_joinded.loc[len_pmj:len_pmj + len_vert - 1, 'Method'] = 'Disc'
+    csa_joinded.loc[len_pmj + len_vert:len_pmj + len_vert + len_spinal -1, 'Method'] = 'Spinal Roots'
+    # Drop unwanted columns for ANOVA
+    csa_joinded.drop(columns=['Slice (I->S)', 'DistancePMJ'], inplace=True)
+    # Remove level 1 since only for discs
+    csa_joinded = csa_joinded.drop(csa_joinded.loc[(csa_joinded['Levels']==1)].index)
+    # Remove levels higher than 5 because of unbalanced data
+    for level in np.unique(csa_joinded.loc[:, 'Levels']).tolist():
+        if level > 5:
+            csa_joinded = csa_joinded.drop(csa_joinded.loc[(csa_joinded['Levels']==level)].index)
+    compute_anova(csa_joinded, level='2-3-4-5', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses']) 
+    # Compute only on level 3
+    csa_joinded_3 = csa_joinded.loc[(csa_joinded['Levels']==3)]
+    compute_anova(csa_joinded_3, level='3', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses'])
+
+    # Check only SPINAL vs PMJ
+    csa_joinded_pmj = csa_joinded.drop(csa_joinded.loc[csa_joinded['Method']=='Disc'].index)
+    compute_anova(csa_joinded_pmj, level='PMJ vs SPINAL', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses'])
+
+    # Check only SPINAL vs VERT
+    csa_joinded_disc = csa_joinded.drop(csa_joinded.loc[csa_joinded['Method']=='PMJ'].index)
+    compute_anova(csa_joinded_disc, level='DISC vs SPINAL', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses'])
+
+    # Check only PMJ vs VERT
+    csa_joinded_disc_pmj = csa_joinded.drop(csa_joinded.loc[csa_joinded['Method']=='Spinal Roots'].index)
+    compute_anova(csa_joinded_disc_pmj, level='DISC vs PMJ', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses'])
+
+    # Check only SPINAL vs PMJ for 3
+    csa_joinded_pmj3 = csa_joinded_3.drop(csa_joinded_3.loc[csa_joinded_3['Method']=='Disc'].index)
+    compute_anova(csa_joinded_pmj3, level='PMJ vs SPINAL 3', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses'])
+
+    # Check only SPINAL vs VERT for 3
+    csa_joinded_disc3 = csa_joinded_3.drop(csa_joinded_3.loc[csa_joinded_3['Method']=='PMJ'].index)
+    compute_anova(csa_joinded_disc3, level='DISC vs SPINAL 3', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses'])
+
+    # Check only PMJ vs VERT for 3
+    csa_joinded_disc_pmj3 = csa_joinded_3.drop(csa_joinded_3.loc[csa_joinded_3['Method']=='Spinal Roots'].index)
+    compute_anova(csa_joinded_disc_pmj3, level='DISC vs PMJ 3', depvar='MEAN(area)', subject='Subject', within=['Method', 'Levels', 'ses'])
+
+
+
+
 def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     """
     For CSA of 3 references: spinal rootlets, discs and PMJ, generate a scatterplot and boxplot across subjects perlevels.
     Args:
-        csa_vert (pandas.DataFrame): Dataframe fo statistics of vertebral-based CSA.
-        csa_spinal (pandas.DataFrame): Dataframe fo statistics of spinal-based CSA.
-        csa_pmj (pandas.DataFrame): Dataframe fo statistics of pmj-based CSA.
+        csa_vert (pandas.DataFrame): Dataframe of statistics of vertebral-based CSA.
+        csa_spinal (pandas.DataFrame): Dataframe of statistics of spinal-based CSA.
+        csa_pmj (pandas.DataFrame): Dataframe of statistics of pmj-based CSA.
 
     Returns:
 
@@ -389,26 +456,6 @@ def analyse_csa(csa_vert, csa_spinal, csa_pmj):
     plt.ylabel('COV (%)')
     plt.savefig('boxplot_csa_COV.png')
     plt.close()
-    # Compute ANOVA on mean CSA perlevel and all levels
-    for level in range(2, 8):
-        df = csa.loc[csa['Level']==level]
-        if level in [6,7]:
-            df = df.drop(df.loc[df['Subject']=='sub-008'].index)
-        logger.info('CSA ANOVA:')
-        compute_anova(df,level, depvar='Mean', subject='Subject', within=['Method'])
-        logger.info('COV ANOVA:')
-        compute_anova(df,level, depvar='COV', subject='Subject', within=['Method'])
-    data = csa
-    nan_idx = (data.loc[pd.isna(data['Mean']), :].index).to_numpy()
-    sub_nan = data.loc[nan_idx, 'Subject']
-    if not sub_nan.empty:
-        data.dropna(inplace=True, axis=0)
-        data.drop(data.loc[data['Subject']==sub_nan.to_numpy()[0]].index, inplace=True)
-    logger.info('CSA ANOVA:')
-    compute_anova(data, level='all', depvar='Mean', subject='Subject', within=['Method', 'Level'])
-    # Compute ANOVA on mean COV perlevel and all levels
-    logger.info('COV ANOVA:')
-    compute_anova(data, level='all', depvar='COV', subject='Subject', within=['Method','Level'])
 
     # Scatter Plot of COV of CSA permethods and perlevel
     fig, ax = plt.subplots(1, 3, sharey=True, figsize=(10, 30))
@@ -458,15 +505,14 @@ def get_csa_files(path_results):
         path_csa_spinal (list): list of all paths to spinal csa.
         path_csa_pmj (list): list of all paths to pmj csa.
     """
-    path_csa_vert = glob.glob(path_results + "*_vert.csv", recursive=True)
-    path_csa_spinal = glob.glob(path_results + "*_spinal.csv", recursive=True)
-    path_csa_pmj = glob.glob(path_results + "*_pmj.csv", recursive=True)
+    path_csa_vert = glob.glob(os.path.join(path_results, "*_csa-SC_vert.csv"), recursive=True)
+    path_csa_spinal = glob.glob(os.path.join(path_results, "*_csa-SC_spinal.csv"), recursive=True)
+    path_csa_pmj = glob.glob(os.path.join(path_results, "*_csa-SC_pmj.csv"), recursive=True)
 
     return path_csa_vert, path_csa_spinal, path_csa_pmj
 
 
 def compute_neck_angle(angles):
-    #angles.set_index(['Subject'], inplace=True)
     angles.sort_index(axis=1, inplace=True)
     ses_Up = angles.loc[angles['ses']=='ses-headUp']
     ses_Normal = angles.loc[angles['ses']=='ses-headNormal']
@@ -506,29 +552,88 @@ def df_to_csv(df, filename):
 
 
 def compute_corr_angles(angles, distance):
+    """
+    Compute correlation between difference in neck angle and the distance between nerve rootlet-Disc/PMJ between flexion and extension positions.
+    Args:
+        angles (ndarray): array of angle difference bewteen neck flexion and extension 
+        distance (panda.DataFrame): array of distance bewteen nerve rootlet & PMJ or discs for each level
+    """
     subjects = np.unique(np.array([sub.split('_')[0] for sub in distance.index]))
     df_pmj = pd.DataFrame(columns=['subject', 'angles', 'distance_pmj', 'level'])
     df_disc = pd.DataFrame(columns=['subject', 'angles', 'distance_disc', 'level'])
     df_pmj['subject'] = np.tile(subjects,6)
     df_pmj['level'] = np.tile(range(2,8),10)
     df_pmj['angles'] = np.tile(angles,6)
-    #distance.dropna(inplace=True)
-    print(distance)
-    print(df_pmj)
+
+
+    df_disc['subject'] = np.tile(subjects,6)
+    df_disc['level'] = np.tile(range(2,8),10)
+    df_disc['angles'] = np.tile(angles,6)
+
     for level in range(2,8):
         for sub in subjects:
             dist_pmj_up = distance.loc[(distance['ses']=='Up')& (distance['Nerve']==level) & (distance['Subject_id']==sub),'Distance - PMJ (mm)']
             dist_pmj_up.dropna(inplace=True)
             dist_pmj_down = distance.loc[(distance['ses']=='Down')& (distance['Nerve']==level) & (distance['Subject_id']==sub),'Distance - PMJ (mm)']
             dist_pmj_down.dropna(inplace=True)
-            print('diff:', (np.array(dist_pmj_up) - np.array(dist_pmj_down)))
-            df_pmj.loc[(df_pmj['level']==level) & (df_pmj['subject']==sub),'distance_pmj'] = np.array(dist_pmj_up)[0] - np.array(dist_pmj_down)[0]
-            #df_disc['distance_disc'] = distance.loc[(distance['ses']=='Up'),'Distance - Disc (mm)'] - distance.loc[(distance['ses']=='Down'),'Distance - Disc (mm)']
+            diff_pmj = np.array(dist_pmj_up) - np.array(dist_pmj_down)
+
+            dist_disc_up = distance.loc[(distance['ses']=='Up')& (distance['Disc']==level) & (distance['Subject_id']==sub),'Distance - Disc (mm)']
+            dist_disc_up.dropna(inplace=True)
+            dist_disc_down = distance.loc[(distance['ses']=='Down')& (distance['Disc']==level) & (distance['Subject_id']==sub),'Distance - Disc (mm)']
+            dist_disc_down.dropna(inplace=True)
+            diff_disc = np.array(dist_disc_up) - np.array(dist_disc_down)
+            if bool(diff_pmj):
+                df_pmj.loc[(df_pmj['level']==level) & (df_pmj['subject']==sub),'distance_pmj'] = diff_pmj[0]
+            if bool(diff_disc):
+                df_disc.loc[(df_disc['level']==level) & (df_disc['subject']==sub),'distance_disc'] = diff_disc[0]
+    
+    df_pmj = df_pmj.astype({"distance_pmj": float})
+    df_pmj.dropna(inplace=True)
+    df_pmj.set_index(['subject'], inplace=True)
     corr_table_pmj = df_pmj.corr(method='pearson')
-    print(corr_table_pmj)
+    logger.info(corr_table_pmj)
     # Save a.csv file of the correlation matrix in the results folder
-    corr_filename = 'corr_angle_distance'
+    corr_filename = 'corr_angle_distance_pmj'
     df_to_csv(corr_table_pmj, corr_filename + '.csv')
+
+    df_disc = df_disc.astype({"distance_disc": float})
+    df_disc.dropna(inplace=True)
+    df_disc.set_index(['subject'], inplace=True)
+    corr_table_disc = df_disc.corr(method='pearson')
+    logger.info(corr_table_disc)
+
+    # Save a.csv file of the correlation matrix in the results folder
+    corr_filename = 'corr_angle_distance_disc'
+    df_to_csv(corr_table_disc, corr_filename + '.csv')
+
+    fig, ax = plt.subplots(1, 2, sharey=True, figsize=(8,5))
+    ax[0].grid(color='lightgrey')
+    sns.scatterplot(ax=ax[0], x=df_pmj['angles'], y=df_pmj['distance_pmj'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral", legend=False)
+
+    ax[0].set_ylabel('PMJ distance')
+    ax[0].set_xlabel('Angle')
+    ax[0].set_title('a) PMJ')
+    ax[0].set_box_aspect(1)
+    
+    ax[1].grid(color='lightgrey')
+    #ax[1].legend(loc='center right') #bbox_to_anchor =(0, 1)
+    sns.scatterplot(ax=ax[1], x=df_disc['angles'], y=df_disc['distance_disc'], alpha=1, edgecolors=None, linewidth=0, palette="Spectral")
+    ax[1].set_ylabel('Disc distance')
+    ax[1].set_xlabel('Angle')
+    ax[1].set_title('b) DISC')
+    ax[1].set_box_aspect(1)
+    #handles, labels = ax[1].get_legend_handles_labels()
+    #fig.legend(handles, labels, loc='center right', title='Subject')
+    #ax[1].get_legend().remove()
+
+    plt.tight_layout(rect=[0,0,0.86,1])
+    filename = "scatterplot_angles_distance.png"
+    plt.savefig(filename)
+    plt.close()
+    for lev in range(2,8):
+        logger.info('PMJ {} \n {}'.format(lev, (df_pmj.loc[df_pmj['level']==lev]).corr(method='pearson')))
+        logger.info('Disc {} \n {}'.format(lev, (df_disc.loc[df_disc['level']==lev]).corr(method='pearson')))
 
 
 def main():
@@ -556,12 +661,13 @@ def main():
     angles_df = pd.DataFrame()
 
     # Loop through files to get all CSA values and put them in a dataframe
+    # Retreive Vertebral-based CSA
     for files in files_vert:
         data = get_csa(files)
         angles = get_RL_angle(files)
         basename = os.path.basename(files)
         # Retrieve .csv files of labels correspondance.
-        path_labels_corr = glob.glob(args.path_results + basename[0:18]+"*_vert.nii.gz_labels.csv", recursive=True)
+        path_labels_corr = glob.glob(os.path.join(args.path_results, basename[0:18] + "*_vert.nii.gz_labels.csv"), recursive=True)
         labels_corr = csv2dataFrame(path_labels_corr[0])
         # Get labels correspondance for vert
         for label in data['Slice (I->S)']:
@@ -571,20 +677,23 @@ def main():
         angles_df = angles_df.append(angles, ignore_index=True)
     # Compute RL angle of spinal cord between disc C1-C2 and C5-C6 
     angles_diff = compute_neck_angle(angles_df)
-    
+    # Compute correlation bewteen angle and distances
     compute_corr_angles(angles_diff, distances)
 
+    # Retreive spinal-based CSA
     for files in files_spinal:
         data = get_csa(files)
         basename = os.path.basename(files)
         # Retrve .csv files of labels correspondance.
-        path_labels_corr = glob.glob(args.path_results + basename[0:18]+"*_discs.nii.gz_labels.csv", recursive=True)
+        path = os.path.join(args.path_results, basename[0:18] + "*_discs.nii.gz_labels.csv")
+        path_labels_corr = glob.glob(path, recursive=True)
         labels_corr = csv2dataFrame(path_labels_corr[0])
         # Get labels correspondance for spinal
         for label in data['Slice (I->S)']:
             data.loc[data['Slice (I->S)'] == label, 'Levels'] = labels_corr.loc[labels_corr['Slices'] == label, 'Level']
         csa_spinal = csa_spinal.append(data, ignore_index=True)
-
+    
+    # Retreive PMJ-based CSA
     for files in files_pmj:
         data = get_csa(files)
         csa_pmj = csa_pmj.append(data, ignore_index=True)
@@ -597,7 +706,7 @@ def main():
     stats_csa_spinal = compute_stats_csa(csa_spinal, 'Levels')
     logger.info('PMJ-based CSA')
     stats_csa_pmj = compute_stats_csa(csa_pmj, 'DistancePMJ')
-
+    compute_anova_csa(csa_vert, csa_pmj, csa_spinal)
     analyse_csa(stats_csa_vert, stats_csa_spinal, stats_csa_pmj)
 
 
