@@ -7,7 +7,7 @@ CSA measure based on distance from pontomedullary junction (PMJ)
     * [Run manual labeling script](#run-manual-labeling-script)
 * [Analysis pipeline](#analysis-pipeline)
 
-Please cite this work if you use it or if you are inspired by it:
+👉 Please cite this work if you use it or if you are inspired by it:
 https://www.biorxiv.org/content/10.1101/2021.09.30.462636v1
 
 # Data collection and organization
