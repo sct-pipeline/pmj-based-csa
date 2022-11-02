@@ -1,5 +1,10 @@
 # PMJ-based CSA
 CSA measure based on distance from pontomedullary junction (PMJ)
+
+👉 Please cite this work if you use it or if you are inspired by it:
+https://www.biorxiv.org/content/10.1101/2021.09.30.462636v1
+
+
 # Table of contents 
 * [Data collection and organization](#data-collection-and-organization)
 * [ Manual labeling of spinal cord rootlets with FSLeyes](#manual-labeling-of-spinal-cord-rootlets-with-FSLeyes)
@@ -7,8 +12,6 @@ CSA measure based on distance from pontomedullary junction (PMJ)
     * [Run manual labeling script](#run-manual-labeling-script)
 * [Analysis pipeline](#analysis-pipeline)
 
-👉 Please cite this work if you use it or if you are inspired by it:
-https://www.biorxiv.org/content/10.1101/2021.09.30.462636v1
 
 # Data collection and organization
 The data is currently stored in our internal datas server under `~/duke/projects/pmj/pmj_csa/pmj-data-BIDS/`
