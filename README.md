@@ -55,7 +55,7 @@ Wait until the 3 images of the same subject (headDown, headUp, headNormal) open 
 # Analysis pipeline
 
 ### Dependencies
-* SCT
+* SCT v5.4
 * Python 3.7
 
 ### Installation
