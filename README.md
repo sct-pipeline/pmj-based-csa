@@ -24,7 +24,6 @@ The data is currently stored in our internal datas server under `~/duke/projects
 Download this repository:
 ```
 git clone https://github.com/sct-pipeline/pmj-based-csa.git
-
 ```
 ## Run manual labeling script
 1. In the terminal, go into this repository
