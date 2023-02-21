@@ -39,12 +39,12 @@ Wait until the 3 images of the same subject (headDown, headUp, headNormal) open 
 4. Click on: *Tools → Edit mode*
 5. Click on: *Edit (ortho view) → Create mask*
 6. Change parameter `Fill value` according to the spinal level : 
-7. Locate the C3 spinal root using the sagittal and axial views (usually around C2 vertebral level)
-8. Identify the slices that cover the C3 spinal root using the coronal and axial views (see schematic below)
-9. Place the label 3 at the center of the spinal cord on the median axial slice that cover the spinal root
-10. Erase the 3 voxels we don’t want (verify that the label is only one voxel
+7. Locate the C2 spinal root using the sagittal and axial views (usually around C1 vertebral level)
+8. Identify the slices that cover the C2 spinal root using the coronal and axial views (see schematic below)
+9. Place the label 2 at the center of the spinal cord on the median axial slice that cover the spinal root
+10. Erase the 3 voxels we don’t want (verify that the label is only one voxel)
 11. Repeat steps 3 to 5 for each spinal root by modifying the parameter `Fill value`:
-    * C4 → 4, C5 → 5, … , C8 → 8, T1 → 9, …, T4 → 12, …
+    * C3 → 3, C4 → 4, C5 → 5, … , C8 → 8, T1 → 9, …, T4 → 12, …
     * Stop when the contrast is not strong enough to accurately label the spinal roots
 12. Save the mask under the same folder than the image with the suffix `_spinalroots.nii.gz`
 
