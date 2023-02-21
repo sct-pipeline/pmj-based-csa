@@ -24,8 +24,7 @@ The data is currently stored in our internal datas server under `~/duke/projects
 Download this repository:
 ```
 git clone https://github.com/sct-pipeline/pmj-based-csa.git
-cd pmj-based-csa
-conda env create -n venv-pmj -f requirements.txt
+
 ```
 ## Run manual labeling script
 1. In the terminal, go into this repository
@@ -64,6 +63,8 @@ Wait until the 3 images of the same subject (headDown, headUp, headNormal) open 
 Download this repository:
 ~~~
 git clone https://github.com/sct-pipeline/pmj-based-csa
+cd pmj-based-csa
+conda env create -n venv-pmj -f requirements.txt
 ~~~
 
 ## Neck positions analysis
