@@ -16,7 +16,13 @@ Bédard S, Cohen-Adad J. Automatic measure and normalization of spinal cord cros
 
 
 # Data collection and organization
-The data is currently stored in our internal datas server under `~/duke/projects/pmj/pmj_csa/pmj-data-BIDS/`
+The data is on OpenNeuro: https://openneuro.org/datasets/ds004507/versions/1.0.1
+
+If used, please cite as:
+
+```
+S. Bédard and J. Cohen-Adad (2023). Spinal Cord Head Positions. OpenNeuro. [Dataset] doi: doi:10.18112/openneuro.ds004507.v1.0.1
+```
 
 # Manual labeling of spinal cord rootlets with FSLeyes
 ## Installation
