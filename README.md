@@ -54,7 +54,7 @@ Wait until the 3 images of the same subject (headDown, headUp, headNormal) open 
     * Stop when the contrast is not strong enough to accurately label the spinal roots
 12. Save the mask under the same folder than the image with the suffix `_spinalroots.nii.gz`
 
-![image](https://user-images.githubusercontent.com/71230552/141651001-f0c438d7-ae1e-44ba-b689-c5f5b319be22.png)
+![image](https://user-images.githubusercontent.com/71230552/224424787-7c1cb3d5-160f-47d1-9cf2-bfbe9362f7ce.png)
 
 13. Repeat step 4 to 12 for every image (the FSLeyes window will automatically open)
 
