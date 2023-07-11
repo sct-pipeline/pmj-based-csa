@@ -24,7 +24,7 @@ If used, please cite as:
 S. Bédard and J. Cohen-Adad (2023). Spinal Cord Head Positions. OpenNeuro. [Dataset] doi: doi:10.18112/openneuro.ds004507.v1.0.1
 ```
 
-# Manual labeling of spinal cord rootlets with FSLeyes
+# Manual labeling of spinal cord segments using the nerve rootlets with FSLeyes
 ## Installation
 
 Download this repository:
