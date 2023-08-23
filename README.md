@@ -4,6 +4,8 @@ CSA measure based on distance from pontomedullary junction (PMJ)
 👉 Please cite this work if you use it or if you are inspired by it:
 ~~~
 Bédard S, Cohen-Adad J. Automatic measure and normalization of spinal cord cross-sectional area using the pontomedullary junction. Frontiers in Neuroimaging [Internet]. 2022;1. Available from: https://www.frontiersin.org/articles/10.3389/fnimg.2022.1031253
+
+Bédard, S., Bouthillier, M. & Cohen-Adad, J. (2023) Pontomedullary junction as a reference for spinal cord cross-sectional area: validation across neck positions. Sci Rep 13, 13527. https://doi.org/10.1038/s41598-023-40731-3
 ~~~
 
 
